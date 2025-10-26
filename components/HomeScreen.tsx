@@ -8,14 +8,18 @@ import {
     View,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { router } from 'expo-router';
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
+  const navigateToProfile = () => {
+    router.push('/profile');
+  }
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.userInfo}>
+        <TouchableOpacity style={styles.userInfo} onPress={navigateToProfile}>
           {user?.user_metadata?.avatar_url && (
             <Image
               source={{ uri: user.user_metadata.avatar_url }}
@@ -28,7 +32,7 @@ export default function HomeScreen() {
               {user?.user_metadata?.full_name || user?.email}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
