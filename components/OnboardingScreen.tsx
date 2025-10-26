@@ -1,20 +1,19 @@
+import { handleGoogleSignIn } from "@/utils/onboardingUtils";
 import {
-    GoogleSignin,
     GoogleSigninButton,
-    statusCodes,
 } from "@react-native-google-signin/google-signin";
 import React, { useRef, useState } from 'react';
 import {
     Dimensions,
     Image,
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
-import { supabase } from "../lib/supabase";
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 const { width } = Dimensions.get('window');
 
@@ -72,42 +71,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Configure Google Sign-In
-  GoogleSignin.configure({
-    scopes: ["email", "profile"],
-    webClientId:
-      process.env.WEBCLIENTID! ||
-      "12502910031-ufn781pfglonjvupbh778mlrqnr790en.apps.googleusercontent.com",
-  });
 
-  const handleGoogleSignIn = async () => {
-    console.log("Google Sign-In button pressed");
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-
-      if (userInfo.data && userInfo.data.idToken) {
-        await supabase.auth.signInWithIdToken({
-          provider: "google",
-          token: userInfo.data.idToken,
-        });
-        // The AuthContext will handle navigation to HomeScreen
-        console.log("Google Sign-In successful");
-      } else {
-        throw new Error("no ID token present!");
-      }
-    } catch (error: any) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        console.log("User cancelled the login flow");
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        console.log("Operation (e.g. sign in) is in progress already");
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        console.log("Play services not available or outdated");
-      } else {
-        console.log("Google Sign-In error:", error);
-      }
-    }
-  };
 
   const handleScroll = (event: any) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;

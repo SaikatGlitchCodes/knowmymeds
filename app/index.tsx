@@ -6,8 +6,6 @@ import { useAuth } from "../contexts/AuthContext";
 export default function Index() {
   const { session, loading } = useAuth();
 
-  console.log('session', session, 'loading', loading)
-
   if (loading) {
     return (
       <View
