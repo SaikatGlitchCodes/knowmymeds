@@ -18,6 +18,7 @@ import { NAV_THEME } from "../constants";
 import { useAuth } from "../contexts/AuthContext";
 import { useDebounce } from "../hooks/useDebounce";
 import { useProfile } from "../hooks/useProfile";
+import { openGallery } from "../utils/imageUtils";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -25,11 +26,11 @@ const Profile = () => {
     profile,
     preferences,
     loading,
+    updating,
     updateProfile,
     updatePreferences,
-    // uploadAvatar, // Available for future avatar functionality
+    uploadAvatar,
   } = useProfile();
-
   const [tempProfile, setTempProfile] = useState({
     full_name: '',
     phone: '',
@@ -134,7 +135,27 @@ const Profile = () => {
     }
   }, [tempPreferences, preferences, debouncedSavePreferences]);
 
-  const handleImagePicker = async () => {};
+  const handleImagePicker = async () => {
+    const result = await openGallery();
+    
+    if (!result.canceled && result.uri) {
+      await handleImageUpload(result.uri);
+    }
+  };
+
+  const handleImageUpload = async (imageUri: string) => {
+    try {
+      const success = await uploadAvatar(imageUri);
+      if (success) {
+        Alert.alert('Success', 'Profile picture updated successfully');
+      } else {
+        Alert.alert('Error', 'Failed to update profile picture');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Failed to update profile picture');
+    }
+  };
 
   // Handle profile field changes with local state update
   const handleProfileChange = (field: keyof typeof tempProfile, value: string) => {
@@ -199,8 +220,10 @@ const Profile = () => {
             </TouchableOpacity>
           </View>
           <View style={styles.avatarContainer}>
-            {loading ? (
-              <ActivityIndicator size="large" color={NAV_THEME.dark.primary} />
+            {loading || updating ? (
+              <View style={styles.avatarPlaceholder}>
+                <ActivityIndicator size="large" color={NAV_THEME.dark.primary} />
+              </View>
             ) : tempProfile?.avatar_url ? (
               <Image
                 source={{ uri: tempProfile?.avatar_url }}
@@ -216,10 +239,16 @@ const Profile = () => {
               </View>
             )}
             <TouchableOpacity
-              style={styles.updateButton}
+              style={[
+                styles.updateButton,
+                (loading || updating) && styles.updateButtonDisabled
+              ]}
               onPress={handleImagePicker}
+              disabled={loading || updating}
             >
-              <Text style={styles.updateButtonText}>Update</Text>
+              <Text style={styles.updateButtonText}>
+                {updating ? 'Uploading...' : 'Update'}
+              </Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.userName}>{tempProfile?.full_name}</Text>
@@ -420,6 +449,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "500",
+  },
+  updateButtonDisabled: {
+    opacity: 0.6,
   },
   userName: {
     fontSize: 24,

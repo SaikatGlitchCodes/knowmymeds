@@ -46,11 +46,11 @@ export const useProfile = () => {
     
     setUpdating(true);
     try {
+      // Upload avatar and update database
       const avatarUrl = await ProfileService.uploadAvatar(session.user.id, imageUri);
-      if (avatarUrl && profile) {
-        const updatedProfile = { ...profile, avatar_url: avatarUrl };
-        // Update the cached profile in AuthContext
-        updateCachedProfile(updatedProfile);
+      
+      if (avatarUrl) {
+        await refreshProfileData();
         return true;
       }
       return false;
