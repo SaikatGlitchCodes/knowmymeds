@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { NAV_THEME } from '../../constants';
 
 interface Message {
   id: string;
@@ -195,24 +196,24 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: NAV_THEME.dark.background,
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: NAV_THEME.dark.card,
     padding: 20,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: NAV_THEME.dark.border,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    color: NAV_THEME.dark.text,
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 14,
+    color: NAV_THEME.dark.text,
   },
   messagesContainer: {
     flex: 1,
@@ -224,19 +225,19 @@ const styles = StyleSheet.create({
   },
   userMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: '#2563eb',
+    backgroundColor: NAV_THEME.dark.primary,
     borderRadius: 18,
     borderBottomRightRadius: 4,
     padding: 12,
   },
   aiMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: '#fff',
+    backgroundColor: NAV_THEME.dark.card,
     borderRadius: 18,
     borderBottomLeftRadius: 4,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: NAV_THEME.dark.border,
   },
   messageText: {
     fontSize: 16,
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   aiMessageText: {
-    color: '#111827',
+    color: NAV_THEME.dark.text,
   },
   timestamp: {
     fontSize: 12,
@@ -257,60 +258,63 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   aiTimestamp: {
-    color: '#6b7280',
+    color: '#9ca3af',
   },
   typingIndicator: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#9ca3af',
     fontStyle: 'italic',
   },
   quickQuestionsContainer: {
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: NAV_THEME.dark.card,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: NAV_THEME.dark.border,
   },
   quickQuestionsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: NAV_THEME.dark.text,
     marginBottom: 12,
   },
   quickQuestionButton: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: NAV_THEME.dark.background,
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: NAV_THEME.dark.border,
   },
   quickQuestionText: {
     fontSize: 14,
-    color: '#374151',
+    color: NAV_THEME.dark.text,
   },
   inputContainer: {
     flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: NAV_THEME.dark.card,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    alignItems: 'flex-end',
+    borderTopColor: NAV_THEME.dark.border,
+    alignItems: 'center',
+
   },
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: NAV_THEME.dark.border,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 16,
     maxHeight: 100,
     marginRight: 12,
-    backgroundColor: '#f9fafb',
+    backgroundColor: NAV_THEME.dark.background,
+    color: NAV_THEME.dark.text,
   },
   sendButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: NAV_THEME.dark.primary,
     borderRadius: 20,
     width: 40,
     height: 40,
@@ -318,6 +322,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: '#e5e7eb',
+    backgroundColor: NAV_THEME.dark.border,
   },
 });
