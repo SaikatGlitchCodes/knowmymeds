@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
-import { GoogleSignin, statusCodes} from "@react-native-google-signin/google-signin";
 import { supabase } from "../lib/supabase";
 
 // Configure Google Sign-In
@@ -50,5 +50,23 @@ export const resetOnboarding = async () => {
   } catch (error) {
     console.error("Error resetting onboarding:", error);
     Alert.alert("Error", "Failed to reset onboarding");
+  }
+};
+
+export const hasSeenOnboarding = async (): Promise<boolean> => {
+  try {
+    const value = await AsyncStorage.getItem("hasSeenOnboarding");
+    return value === "true";
+  } catch (error) {
+    console.error("Error checking onboarding status:", error);
+    return false;
+  }
+};
+
+export const markOnboardingAsSeen = async () => {
+  try {
+    await AsyncStorage.setItem("hasSeenOnboarding", "true");
+  } catch (error) {
+    console.error("Error marking onboarding as seen:", error);
   }
 };

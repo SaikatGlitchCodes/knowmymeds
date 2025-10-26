@@ -1,5 +1,5 @@
+import { Redirect } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
-import HomeScreen from "../components/HomeScreen";
 import OnboardingScreen from "../components/OnboardingScreen";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -21,9 +21,9 @@ export default function Index() {
     );
   }
 
-  // If user has a session, show home screen
+  // If user has a session, redirect to tab navigation
   if (session) {
-    return <HomeScreen />;
+    return <Redirect href="/(tabs)/home" />;
   }
 
   // If no session, show onboarding with login on last slide
