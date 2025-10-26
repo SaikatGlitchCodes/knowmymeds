@@ -2,8 +2,9 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { NAV_THEME } from '../constants';
+import { router } from 'expo-router';
 
 const tabStyle = StyleSheet.create({
   container: {
@@ -82,10 +83,7 @@ const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation })
         };
 
         const onLongPress = (): void => {
-          navigation.emit({
-            type: 'tabLongPress',
-            target: route.key,
-          });
+          router.push('/addMedsForm');
         };
 
         // Make add-meds tab special button style
@@ -116,6 +114,7 @@ const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation })
             testID={options.tabBarButtonTestID}
             onPress={onPress}
             style={tabStyle.tab}
+            onLongPress={() => Alert.alert("Developing this eater egg!")}
           >
             {getIcon(route.name, isFocused ? btnColor : NAV_THEME[colorScheme === "light" ? "light" : "dark"].text)}
           </TouchableOpacity>

@@ -38,12 +38,14 @@ const AddMedsHomePage = () => {
       logo: <MaterialCommunityIcons name="text-shadow" size={50} color="white" />,
       name: "Fill Form",
       methods: () => {
+        router.push("/addMedsForm");
       },
     },
     {
       logo: <MaterialCommunityIcons name="camera-plus-outline" size={50} color="white" />,
       name: "Scan with AI",
       methods: async () => {
+        setAiLoading(true);
       },
     },
   ];
