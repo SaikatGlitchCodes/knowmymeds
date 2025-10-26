@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React from 'react';
 import {
     Image,
@@ -7,11 +8,11 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import { router } from 'expo-router';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
+
   const navigateToProfile = () => {
     router.push('/profile');
   }
@@ -44,7 +45,10 @@ export default function HomeScreen() {
           <Text style={styles.cardSubtitle}>
             You have no medications scheduled for today
           </Text>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => router.push('/add-meds' as any)}
+          >
             <Text style={styles.addButtonText}>Add Medication</Text>
           </TouchableOpacity>
         </View>
@@ -64,6 +68,24 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.addButton}>
             <Text style={styles.addButtonText}>Set Reminder</Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Quick Actions</Text>
+          <View style={styles.quickActions}>
+            <TouchableOpacity 
+              style={styles.quickActionButton}
+              onPress={() => router.push('/chat' as any)}
+            >
+              <Text style={styles.quickActionText}>Chat with AI</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.quickActionButton}
+              onPress={() => router.push('/profile')}
+            >
+              <Text style={styles.quickActionText}>View Profile</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -155,6 +177,25 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  quickActionButton: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  quickActionText: {
+    color: '#374151',
     fontSize: 14,
     fontWeight: '500',
   },

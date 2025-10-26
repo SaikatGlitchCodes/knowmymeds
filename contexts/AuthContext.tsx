@@ -2,6 +2,7 @@ import { Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { PreferencesData, ProfileData, ProfileService } from '../services/ProfileService';
+import { router } from 'expo-router';
 
 interface AuthContextType {
   user: User | null;
@@ -82,12 +83,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
+      async (event, session) => {
+        console.log('🔔 Auth state changed:', event, session ? 'Session exists' : 'No session');
+        
         if (session) {
           setSession(session);
           setUser(session.user);
           await loadProfileData(session.user.id);
         } else {
+          // Clear all state when session is null
           setSession(null);
           setUser(null);
           setProfile(null);
@@ -106,8 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('❌ Error signing out:', error.message);
       } else {
+        // Clear local state immediately after successful sign out
         setSession(null);
         setUser(null);
+        setProfile(null);
+        setPreferences(null);
+        router.push('/');
       }
     } catch (error) {
       console.error('❌ Error in signOut:', error);

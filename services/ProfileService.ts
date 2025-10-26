@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import imageUploadService from "./ImageUploadService";
 
 export interface ProfileData {
   full_name?: string;
@@ -105,28 +106,12 @@ export class ProfileService {
   static async uploadAvatar(userId: string, imageUri: string) {
     console.log('uploadAvatar');
     try {
-      // Convert image URI to blob
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-
-      const fileName = `${userId}/avatar-${Date.now()}.jpg`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(fileName, blob, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(fileName);
-
-      return urlData.publicUrl;
+      const avatarUrl = await imageUploadService(userId, imageUri, 'avatars');
+      // Update the profile with the new avatar URL in the database
+      await ProfileService.updateProfile(userId, {
+        avatar_url: avatarUrl
+      });
+      return avatarUrl;
     } catch (error) {
       console.error("Error uploading avatar:", error);
       throw error;

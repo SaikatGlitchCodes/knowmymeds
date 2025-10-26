@@ -40,7 +40,7 @@ const slides: OnboardingSlide[] = [
     title: "Smart",
     subtitle: "Medication Tracking",
     description: "Never miss a dose again with intelligent reminders and easy-to-use tracking features.",
-    image: require('../assets/images/brand.png'),
+    image: require('../assets/images/smart.png'),
     backgroundColor: "#F3E5F5",
   },
   {
@@ -48,7 +48,7 @@ const slides: OnboardingSlide[] = [
     title: "Stay",
     subtitle: "Healthy & Safe",
     description: "Get important information about your medications and potential interactions to keep you safe.",
-    image: require('../assets/images/brand.png'),
+    image: require('../assets/images/stay.png'),
     backgroundColor: "#E8F5E8",
   },
   {
@@ -56,7 +56,7 @@ const slides: OnboardingSlide[] = [
     title: "Ready to",
     subtitle: "Get Started?",
     description: "Sign in with your Google account to start managing your medications safely and effectively.",
-    image: require('../assets/images/brand.png'),
+    image: require('../assets/images/login.png'),
     backgroundColor: "#FFF8E1",
     isLoginSlide: true,
   },

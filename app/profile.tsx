@@ -1,22 +1,24 @@
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { NAV_THEME } from "../constants";
 import { useAuth } from "../contexts/AuthContext";
 import { useDebounce } from "../hooks/useDebounce";
 import { useProfile } from "../hooks/useProfile";
+import { openGallery } from "../utils/imageUtils";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -24,11 +26,11 @@ const Profile = () => {
     profile,
     preferences,
     loading,
+    updating,
     updateProfile,
     updatePreferences,
-    // uploadAvatar, // Available for future avatar functionality
+    uploadAvatar,
   } = useProfile();
-
   const [tempProfile, setTempProfile] = useState({
     full_name: '',
     phone: '',
@@ -48,7 +50,7 @@ const Profile = () => {
       if (success) {
         Alert.alert('Success', 'Profile changes saved successfully');
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to save profile changes');
     }
   }, [updateProfile]);
@@ -59,7 +61,7 @@ const Profile = () => {
       if (success) {
         Alert.alert('Success', 'Preferences changes saved successfully');
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to save preference changes');
     }
   }, [updatePreferences]);
@@ -133,7 +135,27 @@ const Profile = () => {
     }
   }, [tempPreferences, preferences, debouncedSavePreferences]);
 
-  const handleImagePicker = async () => {};
+  const handleImagePicker = async () => {
+    const result = await openGallery();
+    
+    if (!result.canceled && result.uri) {
+      await handleImageUpload(result.uri);
+    }
+  };
+
+  const handleImageUpload = async (imageUri: string) => {
+    try {
+      const success = await uploadAvatar(imageUri);
+      if (success) {
+        Alert.alert('Success', 'Profile picture updated successfully');
+      } else {
+        Alert.alert('Error', 'Failed to update profile picture');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Failed to update profile picture');
+    }
+  };
 
   // Handle profile field changes with local state update
   const handleProfileChange = (field: keyof typeof tempProfile, value: string) => {
@@ -151,10 +173,17 @@ const Profile = () => {
     }));
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Sign Out", style: "destructive", onPress: () => { signOut(); router.push('/'); } },
+      { 
+        text: "Sign Out", 
+        style: "destructive", 
+        onPress: async () => {
+          await signOut();
+          // Don't manually navigate - let the AuthContext handle the redirect
+        }
+      },
     ]);
   };
 
@@ -167,10 +196,10 @@ const Profile = () => {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             Alert.alert("Account deleted");
-            router.push('/');
-            signOut();
+            await signOut();
+            // Don't manually navigate - let the AuthContext handle the redirect
           },
         },
       ]
@@ -191,8 +220,10 @@ const Profile = () => {
             </TouchableOpacity>
           </View>
           <View style={styles.avatarContainer}>
-            {loading ? (
-              <ActivityIndicator size="large" color="#4f46e5" />
+            {loading || updating ? (
+              <View style={styles.avatarPlaceholder}>
+                <ActivityIndicator size="large" color={NAV_THEME.dark.primary} />
+              </View>
             ) : tempProfile?.avatar_url ? (
               <Image
                 source={{ uri: tempProfile?.avatar_url }}
@@ -208,10 +239,16 @@ const Profile = () => {
               </View>
             )}
             <TouchableOpacity
-              style={styles.updateButton}
+              style={[
+                styles.updateButton,
+                (loading || updating) && styles.updateButtonDisabled
+              ]}
               onPress={handleImagePicker}
+              disabled={loading || updating}
             >
-              <Text style={styles.updateButtonText}>Update</Text>
+              <Text style={styles.updateButtonText}>
+                {updating ? 'Uploading...' : 'Update'}
+              </Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.userName}>{tempProfile?.full_name}</Text>
@@ -281,7 +318,7 @@ const Profile = () => {
             <Switch
               value={tempPreferences?.medication_reminders}
               onValueChange={(value) => handlePreferenceToggle('medication_reminders', value)}
-              trackColor={{ false: "#374151", true: "#3b82f6" }}
+              trackColor={{ false: NAV_THEME.dark.border, true: NAV_THEME.dark.primary }}
               thumbColor={
                 tempPreferences?.medication_reminders ? "#fff" : "#9ca3af"
               }
@@ -298,7 +335,7 @@ const Profile = () => {
             <Switch
               value={tempPreferences?.email_notifications}
               onValueChange={(val) => handlePreferenceToggle('email_notifications', val)}
-              trackColor={{ false: "#374151", true: "#3b82f6" }}
+              trackColor={{ false: NAV_THEME.dark.border, true: NAV_THEME.dark.primary }}
               thumbColor={
                 tempPreferences?.email_notifications ? "#fff" : "#9ca3af"
               }
@@ -336,7 +373,7 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#111827", // Dark background
+    backgroundColor: NAV_THEME.dark.background,
     paddingTop: Platform.OS === "android" ? 0 : 0,
   },
   header: {
@@ -345,9 +382,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: "#1f2937", // Dark header
+    backgroundColor: NAV_THEME.dark.card,
     borderBottomWidth: 1,
-    borderBottomColor: "#374151", // Dark border
+    borderBottomColor: NAV_THEME.dark.border,
   },
   backButton: {
     position: "absolute",
@@ -358,12 +395,12 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#3b82f6", // Blue accent
+    color: NAV_THEME.dark.primary,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#f9fafb", // Light text
+    color: NAV_THEME.dark.text,
   },
   placeholder: {
     width: 32,
@@ -372,7 +409,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileHeader: {
-    backgroundColor: "#1f2937", // Dark section
+    backgroundColor: NAV_THEME.dark.card,
     alignItems: "center",
     paddingVertical: 30,
     marginBottom: 20,
@@ -390,7 +427,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: "#3b82f6", // Blue avatar
+    backgroundColor: NAV_THEME.dark.primary,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -403,7 +440,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: -5,
     right: -5,
-    backgroundColor: "#3b82f6", // Blue button
+    backgroundColor: NAV_THEME.dark.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -413,18 +450,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
   },
+  updateButtonDisabled: {
+    opacity: 0.6,
+  },
   userName: {
     fontSize: 24,
     fontWeight: "600",
-    color: "#f9fafb", // Light text
+    color: NAV_THEME.dark.text,
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 16,
-    color: "#9ca3af", // Muted text
+    color: "#9ca3af", // Keep as muted text
   },
   section: {
-    backgroundColor: "#1f2937", // Dark section
+    backgroundColor: NAV_THEME.dark.card,
     marginBottom: 10,
     paddingHorizontal: 20,
     paddingVertical: 24,
@@ -432,7 +472,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#f9fafb", // Light text
+    color: NAV_THEME.dark.text,
     marginBottom: 20,
   },
   inputGroup: {
@@ -446,16 +486,16 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#374151", // Dark border
+    borderColor: NAV_THEME.dark.border,
     borderRadius: 8,
     paddingHorizontal: 20,
     paddingVertical: 12,
     fontSize: 16,
-    color: "#f9fafb", // Light text
-    backgroundColor: "#111827", // Dark input background
+    color: NAV_THEME.dark.text,
+    backgroundColor: NAV_THEME.dark.background,
   },
   disabledInput: {
-    backgroundColor: "#374151", // Darker disabled background
+    backgroundColor: NAV_THEME.dark.border,
     color: "#9ca3af", // Muted text
   },
   helperText: {
@@ -469,7 +509,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#374151", // Dark border
+    borderBottomColor: NAV_THEME.dark.border,
   },
   preferenceInfo: {
     flex: 1,
@@ -478,7 +518,7 @@ const styles = StyleSheet.create({
   preferenceTitle: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#f9fafb", // Light text
+    color: NAV_THEME.dark.text,
     marginBottom: 4,
   },
   preferenceDescription: {
@@ -486,7 +526,7 @@ const styles = StyleSheet.create({
     color: "#9ca3af", // Muted text
   },
   signOutButton: {
-    backgroundColor: "#ef4444", // Red button (unchanged)
+    backgroundColor: NAV_THEME.dark.notification,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -499,13 +539,13 @@ const styles = StyleSheet.create({
   },
   dangerZone: {
     borderTopWidth: 1,
-    borderTopColor: "#374151", // Dark border
+    borderTopColor: NAV_THEME.dark.border,
     paddingTop: 20,
   },
   dangerTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#ef4444", // Red title (unchanged)
+    color: NAV_THEME.dark.notification,
     marginBottom: 8,
   },
   dangerDescription: {
@@ -514,7 +554,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   deleteButton: {
-    backgroundColor: "#dc2626", // Dark red button
+    backgroundColor: "#dc2626", // Keep darker red for delete
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -536,7 +576,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   savingText: {
-    color: "#3b82f6",
+    color: NAV_THEME.dark.primary,
     fontSize: 14,
     fontWeight: "500",
   },
