@@ -13,7 +13,6 @@ import { useAuth } from "../../contexts/AuthContext";
 export default function HomeScreen() {
   const { user, signOut, profile } = useAuth();
 
-  console.log("profile", profile);
   const navigateToProfile = () => {
     router.push("/profile");
   };
