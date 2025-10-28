@@ -62,6 +62,7 @@ export interface CalendarMedicineSummary {
   time_of_day: string;
   schedule_id: string;
   number_of_tablets: number;
+  form: MedicineForm;
   date?: string;
   status: 'pending' | 'taken' | 'missed' | 'skipped';
   taken_at?: string;

@@ -15,6 +15,8 @@ import { Agenda } from "react-native-calendars";
 import { useAuth } from "../../contexts/AuthContext";
 
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { medicineFormOptions } from "@/components/AddMedsForm";
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();
@@ -52,10 +54,14 @@ export default function HomeScreen() {
     const today = new Date();
     const startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-    
+
     // Generate all dates in the range and initialize with empty arrays
-    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-      const dateString = date.toISOString().split('T')[0];
+    for (
+      let date = new Date(startDate);
+      date <= endDate;
+      date.setDate(date.getDate() + 1)
+    ) {
+      const dateString = date.toISOString().split("T")[0];
       transformedItems[dateString] = [];
     }
 
@@ -75,22 +81,26 @@ export default function HomeScreen() {
   const loadItemsForMonth = useCallback((month: any) => {
     const year = month.year;
     const monthIndex = month.month - 1; // month is 1-based, Date constructor expects 0-based
-    
+
     // Get first and last day of the month
     const firstDay = new Date(year, monthIndex, 1);
     const lastDay = new Date(year, monthIndex + 1, 0);
-    
+
     // Add empty arrays for all days in the month if they don't exist
-    setItems(prevItems => {
+    setItems((prevItems) => {
       const newItems = { ...prevItems };
-      
-      for (let date = new Date(firstDay); date <= lastDay; date.setDate(date.getDate() + 1)) {
-        const dateString = date.toISOString().split('T')[0];
+
+      for (
+        let date = new Date(firstDay);
+        date <= lastDay;
+        date.setDate(date.getDate() + 1)
+      ) {
+        const dateString = date.toISOString().split("T")[0];
         if (!newItems[dateString]) {
           newItems[dateString] = [];
         }
       }
-      
+
       return newItems;
     });
   }, []);
@@ -146,31 +156,30 @@ export default function HomeScreen() {
     const medicine: CalendarMedicineSummary = item.medicine;
 
     if (!medicine) return null;
-
+    const iconName = medicineFormOptions.filter((option) => {
+      return option.title === medicine.form;
+    })[0].iconName;
     return (
       <TouchableOpacity
         style={styles.item}
         onPress={() => handleMedicinePress(medicine)}
       >
-        <View style={styles.itemHeader}>
-          <Text
-            style={styles.itemText}
-          > 
-            {medicine.medicine}
-          </Text>
-          <Text style={styles.timeText}>{medicine.time_of_day}</Text>
-        </View>
-        <View style={styles.itemDetails}>
-          <Text style={styles.dosageText}>
-            {medicine.dose_in_mg}mg
-          </Text>
-          <View
-            style={[styles.statusBadge, getStatusBadgeStyle(medicine.status)]}
-          >
-            <Text style={styles.statusText}>
-              {medicine.status.charAt(0).toUpperCase() +
-                medicine.status.slice(1)}
-            </Text>
+        <MaterialCommunityIcons name={iconName} size={40} color="white" />
+        <View style={{ flex: 1 }}>
+          <View style={styles.itemHeader}>
+            <Text style={styles.itemText}>{medicine.medicine}</Text>
+            <Text style={styles.timeText}>{medicine.time_of_day}</Text>
+          </View>
+          <View style={styles.itemDetails}>
+            <Text style={styles.dosageText}>{medicine.dose_in_mg}mg</Text>
+            <View
+              style={[styles.statusBadge, getStatusBadgeStyle(medicine.status)]}
+            >
+              <Text style={styles.statusText}>
+                {medicine.status.charAt(0).toUpperCase() +
+                  medicine.status.slice(1)}
+              </Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -212,7 +221,9 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
         <View>
-          <Text style={styles.sectionTitle}>Take Medicine today for health tomorrow</Text>
+          <Text style={styles.sectionTitle}>
+            Take Medicine today for health tomorrow
+          </Text>
         </View>
       </View>
       {/* Agenda should NOT be wrapped in ScrollView */}
@@ -247,7 +258,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: NAV_THEME.dark.background,
   },
-  headerContainer:{
+  headerContainer: {
     padding: 20,
     backgroundColor: NAV_THEME.dark.card,
     borderRadius: 30,
@@ -281,7 +292,7 @@ const styles = StyleSheet.create({
   signOutText: { color: "#fff", fontSize: 14, fontWeight: "500" },
   item: {
     backgroundColor: NAV_THEME.dark.card,
-    flex: 1,
+    flexDirection: "row",
     borderRadius: 8,
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -289,6 +300,8 @@ const styles = StyleSheet.create({
     marginTop: 7,
     marginBottom: 5,
     borderWidth: 1,
+    alignItems: "center",
+    gap: 12,
   },
   takenItem: {
     backgroundColor: "#1a3d2e",
