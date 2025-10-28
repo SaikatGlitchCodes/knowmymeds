@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import type {
+    CalendarMedicineSummary,
     CreatePrescriptionResponse,
     Prescription,
     PrescriptionFormData,
@@ -7,9 +8,7 @@ import type {
 } from "../types/prescription";
 
 export class PrescriptionService {
-  /**
-   * Add a new medicine with schedule
-   */
+  // Add a new medicine prescription
   static async addMedicine(
     userId: string, 
     formData: PrescriptionFormData
@@ -73,9 +72,7 @@ export class PrescriptionService {
     }
   }
 
-  /**
-   * Get user's medicines
-   */
+  // Fetch all medicines for a user
   static async getMedicines(userId: string): Promise<Prescription[]> {
     const { data, error } = await supabase
       .from('new_prescriptions')
@@ -87,9 +84,7 @@ export class PrescriptionService {
     return data || [];
   }
 
-  /**
-   * Delete a medicine
-   */
+  // Delete a medicine by ID
   static async deleteMedicine(prescriptionId: string): Promise<void> {
     const { error } = await supabase
       .from('new_prescriptions')
@@ -99,9 +94,133 @@ export class PrescriptionService {
     if (error) throw error;
   }
 
-  /**
-   * Generate intake logs for the treatment period
-   */
+  // Get calendar medicine summary for a user
+  static async getCalendarMedicineSummary(
+    userId: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<CalendarMedicineSummary[]> {
+    try {
+      let query = supabase
+        .from('v_calendar_medicine_summary')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: true })
+        .order('time_of_day', { ascending: true });
+
+      // Add date filtering if provided
+      if (startDate) {
+        query = query.gte('date', startDate);
+      }
+      if (endDate) {
+        query = query.lte('date', endDate);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching calendar medicine summary:', error);
+      throw error;
+    }
+  }
+
+  // Get calendar medicine summary for a specific date
+  static async getCalendarMedicineSummaryByDate(
+    userId: string,
+    date: string
+  ): Promise<CalendarMedicineSummary[]> {
+    try {
+      const { data, error } = await supabase
+        .from('v_calendar_medicine_summary')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('date', date)
+        .order('time_of_day', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching calendar medicine summary by date:', error);
+      throw error;
+    }
+  }
+
+  // Get calendar medicine summary for a date range (useful for agenda view)
+  static async getCalendarMedicineSummaryRange(
+    userId: string,
+    startDate: string,
+    endDate: string
+  ): Promise<{ [date: string]: CalendarMedicineSummary[] }> {
+    try {
+      const { data, error } = await supabase
+        .from('v_calendar_medicine_summary')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true })
+        .order('time_of_day', { ascending: true });
+
+      if (error) throw error;
+
+      // Group by date for agenda view
+      const groupedData: { [date: string]: CalendarMedicineSummary[] } = {};
+      
+      if (data) {
+        data.forEach((item: CalendarMedicineSummary) => {
+          if (item.date) {
+            if (!groupedData[item.date]) {
+              groupedData[item.date] = [];
+            }
+            groupedData[item.date].push(item);
+          }
+        });
+      }
+
+      return groupedData;
+    } catch (error) {
+      console.error('Error fetching calendar medicine summary range:', error);
+      throw error;
+    }
+  }
+
+  // Update medicine intake status
+  static async updateIntakeStatus(
+    prescriptionId: string,
+    scheduleId: string,
+    date: string,
+    status: 'pending' | 'taken' | 'missed' | 'skipped',
+    takenAt?: string
+  ): Promise<void> {
+    try {
+      const updateData: any = {
+        status,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (status === 'taken' && takenAt) {
+        updateData.taken_at = takenAt;
+      } else if (status === 'taken') {
+        updateData.taken_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('new_medicine_intake_logs')
+        .update(updateData)
+        .eq('prescription_id', prescriptionId)
+        .eq('schedule_id', scheduleId)
+        .eq('date', date);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating intake status:', error);
+      throw error;
+    }
+  }
+
+  // Generate intake logs for the prescription duration
   private static generateIntakeLogs(
     prescriptionId: string,
     userId: string,

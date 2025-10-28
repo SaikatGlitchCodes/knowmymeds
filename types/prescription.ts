@@ -48,3 +48,21 @@ export interface CreatePrescriptionResponse {
   schedules: PrescriptionSchedule[];
   totalDosesCreated: number;
 }
+
+// Calendar view data interface
+export interface CalendarMedicineSummary {
+  prescription_id: string;
+  user_id: string;
+  medicine: string;
+  uses_of_the_medicine?: string;
+  dose_in_mg: string;
+  prescription_refills?: number;
+  treatment_start_date: string;
+  treatment_end_date: string;
+  time_of_day: string;
+  schedule_id: string;
+  number_of_tablets: number;
+  date?: string;
+  status: 'pending' | 'taken' | 'missed' | 'skipped';
+  taken_at?: string;
+}

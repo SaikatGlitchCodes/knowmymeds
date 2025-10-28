@@ -8,5 +8,5 @@ export type {
 } from './ProfileService';
 
 export type {
-    CreatePrescriptionResponse, FrequencySlot, MedicineForm, Prescription, PrescriptionFormData, PrescriptionSchedule
+    CalendarMedicineSummary, CreatePrescriptionResponse, FrequencySlot, MedicineForm, Prescription, PrescriptionFormData, PrescriptionSchedule
 } from '../types/prescription';
