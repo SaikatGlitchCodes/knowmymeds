@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Calendar } from 'react-native-calendars';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NAV_THEME } from "../constants";
 import { useAuth } from "../contexts/AuthContext";
@@ -42,6 +43,10 @@ const Profile = () => {
     email_notifications: true,
     medication_reminders: true,
   });
+
+  // Date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Debounced save functions with useCallback to prevent infinite re-renders
   const saveProfileDebounced = useCallback(async (profileData: any) => {
@@ -91,6 +96,16 @@ const Profile = () => {
       });
     }
   }, [preferences]);
+
+  // Initialize selected date from profile
+  useEffect(() => {
+    if (profile?.date_of_birth) {
+      const date = new Date(profile.date_of_birth);
+      if (!isNaN(date.getTime())) {
+        setSelectedDate(date);
+      }
+    }
+  }, [profile]);
 
   // Auto-save profile when tempProfile changes
   useEffect(() => {
@@ -171,6 +186,23 @@ const Profile = () => {
       ...prev,
       [key]: value
     }));
+  };
+
+  // Format date for display and storage
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+  };
+
+  // Handle date picker cancel
+  const handleDateCancel = () => {
+    setShowDatePicker(false);
+  };
+
+  // Handle calendar date confirm
+  const handleIOSDateConfirm = () => {
+    const formattedDate = formatDate(selectedDate);
+    handleProfileChange('date_of_birth', formattedDate);
+    setShowDatePicker(false);
   };
 
   const handleSignOut = async () => {
@@ -294,13 +326,14 @@ const Profile = () => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Date of Birth</Text>
-            <TextInput
-              style={styles.input}
-              value={tempProfile.date_of_birth}
-              onChangeText={(text) => handleProfileChange('date_of_birth', text)}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#9ca3af"
-            />
+            <TouchableOpacity
+              style={[styles.input, styles.datePickerButton]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={[styles.datePickerText, { color: tempProfile.date_of_birth ? NAV_THEME.dark.text : '#9ca3af' }]}>
+                {tempProfile.date_of_birth || 'Select date of birth'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -366,6 +399,51 @@ const Profile = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Date Picker Modal */}
+      {showDatePicker && (
+        <View style={styles.datePickerModal}>
+          <View style={styles.datePickerContainer}>
+            <View style={styles.datePickerHeader}>
+              <TouchableOpacity onPress={handleDateCancel}>
+                <Text style={styles.datePickerCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.datePickerTitle}>Select Date of Birth</Text>
+              <TouchableOpacity onPress={handleIOSDateConfirm}>
+                <Text style={styles.datePickerConfirmText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <Calendar
+              onDayPress={(day) => {
+                const date = new Date(day.dateString);
+                setSelectedDate(date);
+              }}
+              maxDate={new Date().toISOString().split('T')[0]}
+              minDate={'1900-01-01'}
+              theme={{
+                backgroundColor: NAV_THEME.dark.card,
+                calendarBackground: NAV_THEME.dark.card,
+                textSectionTitleColor: NAV_THEME.dark.text,
+                selectedDayBackgroundColor: NAV_THEME.dark.primary,
+                selectedDayTextColor: '#ffffff',
+                todayTextColor: NAV_THEME.dark.primary,
+                dayTextColor: NAV_THEME.dark.text,
+                textDisabledColor: '#666666',
+                arrowColor: NAV_THEME.dark.primary,
+                monthTextColor: NAV_THEME.dark.text,
+                indicatorColor: NAV_THEME.dark.primary,
+              }}
+              markedDates={{
+                [selectedDate.toISOString().split('T')[0]]: {
+                  selected: true,
+                  selectedColor: NAV_THEME.dark.primary,
+                  selectedTextColor: '#ffffff'
+                }
+              }}
+            />
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -488,8 +566,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: NAV_THEME.dark.border,
     borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     fontSize: 16,
     color: NAV_THEME.dark.text,
     backgroundColor: NAV_THEME.dark.background,
@@ -502,6 +580,52 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9ca3af", // Muted text
     marginTop: 4,
+  },
+  datePickerButton: {
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  datePickerText: {
+    fontSize: 16,
+  },
+  datePickerModal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  datePickerContainer: {
+    backgroundColor: NAV_THEME.dark.card,
+    borderRadius: 12,
+    margin: 20,
+    overflow: 'hidden',
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: NAV_THEME.dark.border,
+  },
+  datePickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: NAV_THEME.dark.text,
+  },
+  datePickerCancelText: {
+    fontSize: 16,
+    color: '#9ca3af',
+  },
+  datePickerConfirmText: {
+    fontSize: 16,
+    color: NAV_THEME.dark.primary,
+    fontWeight: '600',
   },
   preferenceItem: {
     flexDirection: "row",

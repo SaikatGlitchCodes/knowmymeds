@@ -5,8 +5,7 @@ import { supabase } from "../lib/supabase";
 GoogleSignin.configure({
   scopes: ["email", "profile"],
   webClientId:
-    process.env.WEBCLIENTID! ||
-    "12502910031-ufn781pfglonjvupbh778mlrqnr790en.apps.googleusercontent.com",
+    process.env.WEB_CLIENT_ID,
 });
 
 export const handleGoogleSignIn = async () => {
