@@ -5,6 +5,7 @@ export interface ImagePickerOptions {
   allowsEditing?: boolean;
   aspect?: [number, number];
   quality?: number;
+  base64?: boolean;
 }
 
 export interface ImageResult {
@@ -58,13 +59,15 @@ export const openCamera = async (options: ImagePickerOptions = {}): Promise<Imag
       allowsEditing: options.allowsEditing ?? true,
       aspect: options.aspect ?? [1, 1],
       quality: options.quality ?? 0.8,
+      base64: options.base64 ?? false,
     });
 
-    if (result.canceled || !result.assets[0]) {
+    if (result.canceled || !result.assets || result.assets.length === 0) {
       return { uri: '', canceled: true };
     }
-
-    return { uri: result.assets[0].uri, canceled: false };
+    
+    const uri = result.assets[0].uri;
+    return { uri, canceled: false };
   } catch (error) {
     console.error('Error opening camera:', error);
     Alert.alert('Error', 'Failed to open camera');
@@ -105,4 +108,20 @@ export const prepareImageForUpload = (uri: string) => {
     type: 'image/jpeg',
     name: 'image.jpg',
   };
+};
+
+export const getImageBase64 = async (uri: string): Promise<string> => {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = () => {
+      const base64 = reader.result?.toString().split(',')[1];
+      if (base64) resolve(base64);
+      else reject(new Error('Failed to convert image to base64'));
+    };
+    reader.onerror = reject;
+  });
 };
