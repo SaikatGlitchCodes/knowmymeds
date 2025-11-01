@@ -3,32 +3,36 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Formik } from 'formik';
 import React, { useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-    DosageScheduleForm,
-    InstructionsForm,
-    MedicineDetailsForm,
-    MedicineInfo,
-    frequencyOptions,
-    medicineValidationSchema,
+  DosageScheduleForm,
+  InstructionsForm,
+  MedicineDetailsForm,
+  MedicineInfo,
+  frequencyOptions,
+  medicineValidationSchema,
 } from '../components/AddMedsForm';
 import { NAV_THEME } from '../constants';
+import { supabase } from '../lib/supabase';
+import { PrescriptionService } from '../services';
+import {
+  mapFormToPrescriptionData,
+} from '../utils/prescriptionUtils';
 
 const AddMedsForm = () => {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const params = useLocalSearchParams();
   
-  // Get prefill data from route params if available
   const prefillData = params.prefillData ? JSON.parse(params.prefillData as string) : {};
 
   const initialValues: MedicineInfo = {
@@ -68,14 +72,23 @@ const AddMedsForm = () => {
 
   const handleFormSubmission = async (values: MedicineInfo) => {
     try {
-      // Here you would save to your database
-      console.log('Saving medicine:', values);
-      Alert.alert('Success', 'Medicine added successfully!', [
-        { text: 'OK', onPress: () => router.push('/') }
-      ]);
-    } catch (error) {
-      console.error('Error saving medicine:', error);
-      Alert.alert('Error', 'Failed to save medicine');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        Alert.alert('Error', 'You must be logged in to add medicine');
+        return;
+      }
+
+      const prescriptionData = mapFormToPrescriptionData(values);
+      await PrescriptionService.addMedicine(user.id, prescriptionData);
+      
+      Alert.alert(
+        'Success', 
+        `Medicine "${values.medicine}" added successfully!`,
+        [{ text: 'OK', onPress: () => router.push('/') }]
+      );
+    } catch {
+      Alert.alert('Error', 'Failed to add medicine. Please try again.');
     }
   };
 

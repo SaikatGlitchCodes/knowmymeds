@@ -55,7 +55,6 @@ const AddMedsHomePage = () => {
       style={{ flex: 1, paddingTop: Platform.OS === "android" ? 50 : 0, backgroundColor: NAV_THEME.dark.background }}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1, padding: 20}}
       >
         <View style={{flex: 1, paddingTop: 80}}>
