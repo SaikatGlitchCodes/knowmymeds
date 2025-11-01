@@ -11,7 +11,7 @@ import type {
 
 export const usePrescriptions = () => {
   const [loading, setLoading] = useState(false);
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription | null>(null);
   const [calendarData, setCalendarData] = useState<{ [date: string]: CalendarMedicineSummary[] }>({});
 
   // Get current user ID
@@ -23,22 +23,6 @@ export const usePrescriptions = () => {
     return user.id;
   }, []);
 
-  // Fetch all prescriptions
-  const fetchPrescriptions = useCallback(async () => {
-    try {
-      setLoading(true);
-      const userId = await getCurrentUserId();
-      
-      const data = await PrescriptionService.getMedicines(userId);
-      setPrescriptions(data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching prescriptions:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [getCurrentUserId]);
 
   // Fetch calendar medicine summary for date range
   const fetchCalendarData = useCallback(async (startDate: string, endDate: string) => {
@@ -56,6 +40,23 @@ export const usePrescriptions = () => {
       setLoading(false);
     }
   }, [getCurrentUserId]);
+
+  // Fetch prescript by prescription ID
+  const fetchPrescriptionById = useCallback(async (prescriptionId: string) => {
+    try {
+      setLoading(true);
+      const data = await PrescriptionService.getMedicineById(prescriptionId);
+      if (data) {
+        setPrescriptions(data);
+      }
+      return data;
+    } catch (error) {
+      console.error('Error fetching prescription by ID:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Fetch calendar medicine summary for specific date
   const fetchCalendarDataByDate = useCallback(async (date: string) => {
@@ -93,8 +94,6 @@ export const usePrescriptions = () => {
         ...prev,
         [date]: updatedData
       }));
-      
-      Alert.alert('Success', `Medicine marked as ${status}`);
     } catch (error) {
       console.error('Error updating intake status:', error);
       Alert.alert('Error', 'Failed to update medicine status');
@@ -107,12 +106,7 @@ export const usePrescriptions = () => {
     try {
       setLoading(true);
       const userId = await getCurrentUserId();
-      
-      const result = await PrescriptionService.addMedicine(userId, formData);
-      
-      // Refresh prescriptions list
-      await fetchPrescriptions();
-      
+      const result = await PrescriptionService.addMedicine(userId, formData);      
       return result;
     } catch (error) {
       console.error('Error creating prescription:', error);
@@ -120,27 +114,8 @@ export const usePrescriptions = () => {
     } finally {
       setLoading(false);
     }
-  }, [getCurrentUserId, fetchPrescriptions]);
+  }, [getCurrentUserId]);
 
-  // Delete prescription
-  const deletePrescription = useCallback(async (prescriptionId: string) => {
-    try {
-      setLoading(true);
-      
-      await PrescriptionService.deleteMedicine(prescriptionId);
-      
-      // Refresh prescriptions list
-      await fetchPrescriptions();
-      
-      Alert.alert('Success', 'Medicine deleted successfully');
-    } catch (error) {
-      console.error('Error deleting prescription:', error);
-      Alert.alert('Error', 'Failed to delete medicine');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchPrescriptions]);
 
   return {
     // State
@@ -150,9 +125,8 @@ export const usePrescriptions = () => {
     
     // Actions
     createPrescription,
-    fetchPrescriptions,
-    deletePrescription,
     fetchCalendarData,
+    fetchPrescriptionById,
     fetchCalendarDataByDate,
     updateIntakeStatus,
   };

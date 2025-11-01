@@ -13,6 +13,7 @@ export class PrescriptionService {
     userId: string, 
     formData: PrescriptionFormData
   ): Promise<CreatePrescriptionResponse> {
+    console.log("addMedicine")
     try {
       // 1. Create prescription
       const { data: prescription, error: prescriptionError } = await supabase
@@ -25,6 +26,7 @@ export class PrescriptionService {
           quantity: formData.quantity,
           treatment_start_date: formData.treatment_start_date,
           treatment_end_date: formData.treatment_end_date,
+          side_effects: formData.side_effects,
           special_instructions: formData.special_instructions,
         })
         .select()
@@ -74,6 +76,7 @@ export class PrescriptionService {
 
   // Fetch all medicines for a user
   static async getMedicines(userId: string): Promise<Prescription[]> {
+    console.log("getMedicines")
     const { data, error } = await supabase
       .from('new_prescriptions')
       .select('*')
@@ -84,8 +87,22 @@ export class PrescriptionService {
     return data || [];
   }
 
+  // Get a specific medicine by ID
+  static async getMedicineById(prescriptionId: string): Promise<Prescription | null> {
+    console.log("getMedicineById")
+    const { data, error } = await supabase
+      .from('new_prescriptions')
+      .select('*')
+      .eq('id', prescriptionId)
+      .single();
+
+    if (error) throw error;
+    return data || null;
+  }
+
   // Delete a medicine by ID
   static async deleteMedicine(prescriptionId: string): Promise<void> {
+    console.log("deleteMedicine")
     const { error } = await supabase
       .from('new_prescriptions')
       .delete()
@@ -100,6 +117,7 @@ export class PrescriptionService {
     startDate?: string,
     endDate?: string
   ): Promise<CalendarMedicineSummary[]> {
+    console.log("getCalendarMedicineSummary")
     try {
       let query = supabase
         .from('v_calendar_medicine_summary')
@@ -131,6 +149,7 @@ export class PrescriptionService {
     userId: string,
     date: string
   ): Promise<CalendarMedicineSummary[]> {
+    console.log("getCalendarMedicineSummaryByDate")
     try {
       const { data, error } = await supabase
         .from('v_calendar_medicine_summary')
@@ -153,6 +172,7 @@ export class PrescriptionService {
     startDate: string,
     endDate: string
   ): Promise<{ [date: string]: CalendarMedicineSummary[] }> {
+    console.log("getCalendarMedicineSummaryRange")
     try {
       const { data, error } = await supabase
         .from('v_calendar_medicine_summary')
@@ -194,6 +214,7 @@ export class PrescriptionService {
     status: 'pending' | 'taken' | 'missed' | 'skipped',
     takenAt?: string
   ): Promise<void> {
+    console.log("updateIntakeStatus")
     try {
       const updateData: any = {
         status,
@@ -234,6 +255,7 @@ export class PrescriptionService {
     date: string;
     status: string;
   }[] {
+    console.log("generateIntakeLogs")
     const logs: {
       prescription_id: string;
       schedule_id: string;

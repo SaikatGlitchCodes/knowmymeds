@@ -2,7 +2,7 @@ import { NAV_THEME } from "@/constants";
 import { usePrescriptions } from "@/hooks/usePrescriptions";
 import type { CalendarMedicineSummary } from "@/types/prescription";
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -14,15 +14,21 @@ import {
 import { Agenda } from "react-native-calendars";
 import { useAuth } from "../../contexts/AuthContext";
 
+import MedicationSheet from "@/components/MedicationSheet";
+import MedicineItem from "@/components/MedicineItem";
+import TrueSheet from "@/components/TrueSheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { medicineFormOptions } from "@/components/AddMedsForm";
+import SwipeButton from "rn-swipe-button";
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();
   const { fetchCalendarData, calendarData, updateIntakeStatus } =
     usePrescriptions();
   const [items, setItems] = useState<{ [key: string]: any[] }>({});
+  const [selectedItem, setSelectedItem] =
+    useState<CalendarMedicineSummary | null>(null);
+  const trueSheetRef = useRef<BottomSheet>(null);
 
   // Load initial calendar data
   useEffect(() => {
@@ -109,84 +115,35 @@ export default function HomeScreen() {
     router.push("/profile");
   };
 
+  const handleStatusUpdate = useCallback(
+    async (
+      item: CalendarMedicineSummary,
+      status: CalendarMedicineSummary["status"]
+    ) => {
+      if (!item.date) return;
+
+      try {
+        await updateIntakeStatus(
+          item.prescription_id,
+          item.schedule_id,
+          item.date,
+          status
+        );
+      } catch (error) {
+        console.error("Error updating medicine status:", error);
+        Alert.alert("Error", "Failed to update medicine status");
+      }
+    },
+    [updateIntakeStatus]
+  );
+
   const handleMedicinePress = (item: CalendarMedicineSummary) => {
-    const statusOptions = [
-      {
-        text: "Mark as Taken",
-        onPress: () => handleStatusUpdate(item, "taken"),
-      },
-      {
-        text: "Mark as Missed",
-        onPress: () => handleStatusUpdate(item, "missed"),
-      },
-      {
-        text: "Mark as Skipped",
-        onPress: () => handleStatusUpdate(item, "skipped"),
-      },
-      { text: "Cancel", style: "cancel" as const },
-    ];
-
-    Alert.alert(
-      item.medicine,
-      `${item.dose_in_mg}mg • ${item.number_of_tablets} tablet(s) at ${item.time_of_day}\nStatus: ${item.status}`,
-      statusOptions
-    );
+    console.log("Medicine pressed:", item);
+    trueSheetRef?.current?.snapToIndex(0);
+    setSelectedItem(item);
   };
 
-  const handleStatusUpdate = async (
-    item: CalendarMedicineSummary,
-    status: CalendarMedicineSummary["status"]
-  ) => {
-    if (!item.date) return;
-
-    try {
-      await updateIntakeStatus(
-        item.prescription_id,
-        item.schedule_id,
-        item.date,
-        status
-      );
-    } catch (error) {
-      console.error("Error updating medicine status:", error);
-      Alert.alert("Error", "Failed to update medicine status");
-    }
-  };
-
-  const renderItem = (item: any) => {
-    const medicine: CalendarMedicineSummary = item.medicine;
-
-    if (!medicine) return null;
-    const iconName = medicineFormOptions.filter((option) => {
-      return option.title === medicine.form;
-    })[0].iconName;
-    return (
-      <TouchableOpacity
-        style={styles.item}
-        onPress={() => handleMedicinePress(medicine)}
-      >
-        <MaterialCommunityIcons name={iconName} size={40} color="white" />
-        <View style={{ flex: 1 }}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemText}>{medicine.medicine}</Text>
-            <Text style={styles.timeText}>{medicine.time_of_day}</Text>
-          </View>
-          <View style={styles.itemDetails}>
-            <Text style={styles.dosageText}>{medicine.dose_in_mg}mg</Text>
-            <View
-              style={[styles.statusBadge, getStatusBadgeStyle(medicine.status)]}
-            >
-              <Text style={styles.statusText}>
-                {medicine.status.charAt(0).toUpperCase() +
-                  medicine.status.slice(1)}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const getStatusBadgeStyle = (status: string) => {
+  const getStatusBadgeStyle = useCallback((status: string) => {
     switch (status) {
       case "taken":
         return styles.takenBadge;
@@ -197,11 +154,36 @@ export default function HomeScreen() {
       default:
         return styles.pendingBadge;
     }
+  }, []);
+
+  const renderItem = useCallback(
+    (item: any) => {
+      const medicine: CalendarMedicineSummary = item.medicine;
+
+      if (!medicine) return null;
+      return (
+        <MedicineItem
+          medicine={medicine}
+          onPress={handleMedicinePress}
+          getStatusBadgeStyle={getStatusBadgeStyle}
+        />
+      );
+    },
+    [getStatusBadgeStyle]
+  );
+
+  const handleSwipeSuccess = () => {
+    handleStatusUpdate(selectedItem as CalendarMedicineSummary, "taken");
+    trueSheetRef?.current?.close();
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
+        <Image
+          source={require("../../assets/images/login.png")}
+          style={styles.headerBackgroundImg}
+        />
         <View style={styles.header}>
           <TouchableOpacity style={styles.userInfo} onPress={navigateToProfile}>
             <Image
@@ -226,29 +208,68 @@ export default function HomeScreen() {
           </Text>
         </View>
       </View>
+
       {/* Agenda should NOT be wrapped in ScrollView */}
       <Agenda
         items={items}
         loadItemsForMonth={loadItemsForMonth}
         selected={new Date().toISOString().split("T")[0]}
+        pastScrollRange={2}
+        futureScrollRange={2}
+        removeClippedSubviews={true}
         renderItem={renderItem}
         renderEmptyDate={() => (
           <View style={styles.emptyDate}>
             <Text style={styles.emptyDateText}>No medicines scheduled</Text>
           </View>
         )}
-        rowHasChanged={(r1, r2) => r1.name !== r2.name}
         theme={{
-          selectedDayBackgroundColor: "#4a90e2",
-          todayTextColor: "#4a90e2",
-          agendaTodayColor: "#4a90e2",
-          dotColor: "#4a90e2",
-          agendaKnobColor: "#4a90e2",
+          selectedDayBackgroundColor: NAV_THEME.dark.primary,
+          todayTextColor: NAV_THEME.dark.primary,
+          agendaTodayColor: NAV_THEME.dark.primary,
+          dotColor: NAV_THEME.dark.primary,
+          agendaKnobColor: NAV_THEME.dark.primary,
           calendarBackground: NAV_THEME.dark.background,
           dayTextColor: NAV_THEME.dark.text,
           reservationsBackgroundColor: NAV_THEME.dark.background,
         }}
       />
+      {selectedItem && (
+        <TrueSheet
+          ref={trueSheetRef}
+          snapPoint={
+            selectedItem?.status === "taken" ? ["50%", "80%"] : ["15%", "70%"]
+          }
+        >
+          <View>
+            {selectedItem?.status !== "taken" && (
+              <SwipeButton
+                title="Swipe to take"
+                disableResetOnTap
+                onSwipeSuccess={handleSwipeSuccess}
+                containerStyles={{
+                  backgroundColor: NAV_THEME.dark.primary,
+                  margin: 20,
+                }}
+                thumbIconBackgroundColor={NAV_THEME.dark.btn}
+                thumbIconBorderColor={NAV_THEME.dark.btn}
+                titleStyles={{ color: NAV_THEME.dark.text }}
+                railBackgroundColor={NAV_THEME.dark.card}
+                railBorderColor={NAV_THEME.dark.border}
+                thumbIconWidth={60}
+                railFillBackgroundColor={NAV_THEME.dark.btn}
+                railFillBorderColor={NAV_THEME.dark.btn}
+                shouldResetAfterSuccess={true}
+              />
+            )}
+            <MedicationSheet
+              medicine={selectedItem}
+              handleClose={() => setSelectedItem(null)}
+              updateIntakeStatus={updateIntakeStatus}
+            />
+          </View>
+        </TrueSheet>
+      )}
     </SafeAreaView>
   );
 }
@@ -281,80 +302,16 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   userDetails: { flex: 1 },
-  welcomeText: { fontSize: 14, color: NAV_THEME.dark.text },
+  welcomeText: { fontSize: 18, color: NAV_THEME.dark.text },
   userName: { fontSize: 18, fontWeight: "600", color: NAV_THEME.dark.text },
-  signOutButton: {
-    backgroundColor: NAV_THEME.dark.danger,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  signOutText: { color: "#fff", fontSize: 14, fontWeight: "500" },
-  item: {
-    backgroundColor: NAV_THEME.dark.card,
-    flexDirection: "row",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    marginRight: 10,
-    marginTop: 7,
-    marginBottom: 5,
-    borderWidth: 1,
-    alignItems: "center",
-    gap: 12,
-  },
-  takenItem: {
-    backgroundColor: "#1a3d2e",
-    borderColor: NAV_THEME.dark.success,
-  },
-  missedItem: {
-    backgroundColor: "#3d1a1a",
-    borderColor: NAV_THEME.dark.danger,
-  },
-  skippedItem: {
-    backgroundColor: "#3d2e1a",
-    borderColor: NAV_THEME.dark.warning,
-  },
   sectionTitle: {
     fontSize: 30,
-    fontWeight: "300",
+    fontWeight: "200",
     color: NAV_THEME.dark.text,
-    paddingTop: 30,
-  },
-  itemHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  itemText: {
-    color: NAV_THEME.dark.text,
-    fontSize: 16,
-    fontWeight: "500",
-    flex: 1,
+    paddingTop: 20,
   },
   completedText: {
     opacity: 0.7,
-  },
-  timeText: {
-    color: "#9ca3af",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  itemDetails: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  dosageText: {
-    color: "#9ca3af",
-    fontSize: 14,
-    flex: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
   },
   pendingBadge: {
     backgroundColor: "#374151",
@@ -395,5 +352,12 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 14,
     fontWeight: "600",
+  },
+  headerBackgroundImg: {
+    position: "absolute",
+    bottom: -250,
+    right: -100,
+    height: 400,
+    width: 400,
   },
 });

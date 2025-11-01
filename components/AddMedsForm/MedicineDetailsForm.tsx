@@ -1,8 +1,7 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { NAV_THEME } from '../../constants';
-import { medicineFormOptions } from './constants';
+import { medicineFormOptions } from '../../constants/icon_time';
 import { FormStepProps } from './types';
 
 export const MedicineDetailsForm: React.FC<FormStepProps> = ({ 
@@ -48,11 +47,7 @@ export const MedicineDetailsForm: React.FC<FormStepProps> = ({
               ]}
               onPress={() => setFieldValue('form', item.title)}
             >
-              <MaterialCommunityIcons 
-                name={item.iconName as any} 
-                size={24} 
-                color={values.form === item.title ? '#fff' : NAV_THEME.dark.primary}
-              />
+              {item.icon}
               <Text style={[
                 styles.formText,
                 { color: values.form === item.title ? '#fff' : NAV_THEME.dark.text }
@@ -89,7 +84,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorText: {
-    color: '#ef4444',
+    color: NAV_THEME.dark.danger,
     fontSize: 14,
     marginTop: 4,
   },
