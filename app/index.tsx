@@ -2,6 +2,7 @@ import { Redirect } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import OnboardingScreen from "../components/OnboardingScreen";
 import { useAuth } from "../contexts/AuthContext";
+import { NAV_THEME } from "@/constants";
 
 export default function Index() {
   const { session, loading } = useAuth();
@@ -13,10 +14,10 @@ export default function Index() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#f8f9fa",
+          backgroundColor: NAV_THEME.dark.background,
         }}
       >
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color={NAV_THEME.dark.primary} />
       </View>
     );
   }
