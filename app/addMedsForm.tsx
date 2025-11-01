@@ -80,7 +80,8 @@ const AddMedsForm = () => {
       }
 
       const prescriptionData = mapFormToPrescriptionData(values);
-      await PrescriptionService.addMedicine(user.id, prescriptionData);
+      
+      // await PrescriptionService.addMedicine(user.id, prescriptionData);
       
       Alert.alert(
         'Success', 
