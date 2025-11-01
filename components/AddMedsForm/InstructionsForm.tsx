@@ -42,7 +42,7 @@ export const InstructionsForm: React.FC<FormStepProps> = ({
     while (currentDate <= endDateObj) {
       const dateString = currentDate.toISOString().split('T')[0];
       range[dateString] = {
-        color: '#3b82f6',
+        color: NAV_THEME.dark.primary,
         textColor: 'white',
         startingDay: dateString === startDate,
         endingDay: dateString === endDate,
