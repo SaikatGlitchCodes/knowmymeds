@@ -16,6 +16,7 @@ export interface PrescriptionFormData {
   treatment_start_date: string;
   treatment_end_date: string;
   special_instructions?: string;
+  side_effects?: string;
   frequency: FrequencySlot[];
 }
 
@@ -30,6 +31,7 @@ export interface Prescription {
   treatment_start_date: string;
   treatment_end_date: string;
   special_instructions?: string;
+  side_effects?: string;
   created_at: string;
   updated_at: string;
 }
@@ -66,4 +68,5 @@ export interface CalendarMedicineSummary {
   date?: string;
   status: 'pending' | 'taken' | 'missed' | 'skipped';
   taken_at?: string;
+  times_per_day?: number;
 }
