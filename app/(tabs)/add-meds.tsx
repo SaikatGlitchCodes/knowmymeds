@@ -69,12 +69,12 @@ const AddMedsHomePage = () => {
           
           if (!canceled && uri) {
             if (session?.user.id) {
-              // const uploadedUri = await imageUploadService(session.user.id, uri, "prescription_imgs");
               const base64 = await getImageBase64(uri);
               const response = await axios.post('https://medicineschedulerai.onrender.com/generate/image', {
                 imageBase64: base64,
               });
               const cleanedResponse =  JSON.parse(response.data.response.replace(/```json|```/g, '').trim());
+              console.log('Cleaned Response:', JSON.stringify(cleanedResponse));
               router.push({
               pathname: "/addMedsForm",
               params: { prefillData: JSON.stringify(cleanedResponse) },

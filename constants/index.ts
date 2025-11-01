@@ -12,7 +12,7 @@ export const NAV_THEME = {
     warning: '#d97706',
   },
   dark: {
-    background: '#111827',
+    background: '#222222',
     border: '#374151',
     card: '#1f2937',
     notification: '#ef4444',

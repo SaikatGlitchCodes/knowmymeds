@@ -60,7 +60,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
     marginTop: 7,
     marginBottom: 5,
-    borderWidth: 1,
     alignItems: "center",
     gap: 12,
   },

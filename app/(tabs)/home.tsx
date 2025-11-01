@@ -284,6 +284,7 @@ const styles = StyleSheet.create({
     backgroundColor: NAV_THEME.dark.card,
     borderRadius: 30,
     marginHorizontal: 12,
+    overflow: "hidden",
   },
   header: {
     flexDirection: "row",
