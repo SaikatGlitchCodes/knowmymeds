@@ -1,5 +1,6 @@
+import { frequencyOptions } from '@/constants/icon_time';
 import { AntDesign } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { NAV_THEME } from '../../constants';
 import { FormStepProps } from './types';
@@ -10,15 +11,28 @@ export const DosageScheduleForm: React.FC<FormStepProps> = ({
   touched, 
   setFieldValue 
 }) => {
-  const [selectedFrequency, setSelectedFrequency] = useState(values.frequency);
+  
+  console.log('Current frequency values:', values.frequency);
+  
+  // Simple function to get tablet count for a specific time
+  const getTabletCount = (time: string) => {
+    const slot = values.frequency.find(f => f.time === time);
+    return slot ? slot.number_of_tablets : 0;
+  };
 
-  const updateFrequency = (index: number, change: number) => {
-    const newFrequency = [...selectedFrequency];
-    newFrequency[index] = {
-      ...newFrequency[index],
-      tablets: Math.max(0, newFrequency[index].tablets + change)
-    };
-    setSelectedFrequency(newFrequency);
+  // Simple function to update tablet count for a specific time
+  const updateTabletCount = (time: string, change: number) => {
+    const currentCount = getTabletCount(time);
+    const newCount = Math.max(0, currentCount + change);
+    
+    // Remove the existing slot for this time
+    const otherSlots = values.frequency.filter(f => f.time !== time);
+    
+    // Add the new slot if count > 0
+    const newFrequency = newCount > 0 
+      ? [...otherSlots, { time, number_of_tablets: newCount }]
+      : otherSlots;
+    
     setFieldValue('frequency', newFrequency);
   };
 
@@ -79,48 +93,52 @@ export const DosageScheduleForm: React.FC<FormStepProps> = ({
             showsVerticalScrollIndicator={false}
             nestedScrollEnabled={true}
           >
-            {selectedFrequency.map((timeSlot: any, index: number) => (
-              <View key={index} style={styles.frequencyRow}>
-                <View style={styles.timeContainer}>
-                  <Text style={[styles.timeText, { color: NAV_THEME.dark.text }]}>
-                    {timeSlot.time}
-                  </Text>
-                </View>
-                
-                <View style={styles.frequencyControls}>
-                  <TouchableOpacity
-                    style={[styles.frequencyButton, { 
-                      backgroundColor: NAV_THEME.dark.background,
-                      borderColor: NAV_THEME.dark.border
-                    }]}
-                    onPress={() => updateFrequency(index, -1)}
-                  >
-                    <AntDesign name="minus" size={16} color={NAV_THEME.dark.primary} />
-                  </TouchableOpacity>
-                  
-                  <View style={[styles.countContainer, { 
-                    backgroundColor: timeSlot.tablets > 0 ? NAV_THEME.dark.primary : NAV_THEME.dark.background,
-                    borderColor: NAV_THEME.dark.border
-                  }]}>
-                    <Text style={[styles.frequencyCount, { 
-                      color: timeSlot.tablets > 0 ? '#fff' : NAV_THEME.dark.text 
-                    }]}>
-                      {timeSlot.tablets}
+            {frequencyOptions.map((timeSlot, index: number) => {
+              const tabletCount = getTabletCount(timeSlot.time);
+              
+              return (
+                <View key={index} style={styles.frequencyRow}>
+                  <View style={styles.timeContainer}>
+                    <Text style={[styles.timeText, { color: NAV_THEME.dark.text }]}>
+                      {timeSlot.time}
                     </Text>
                   </View>
                   
-                  <TouchableOpacity
-                    style={[styles.frequencyButton, { 
-                      backgroundColor: NAV_THEME.dark.background,
+                  <View style={styles.frequencyControls}>
+                    <TouchableOpacity
+                      style={[styles.frequencyButton, { 
+                        backgroundColor: NAV_THEME.dark.background,
+                        borderColor: NAV_THEME.dark.border
+                      }]}
+                      onPress={() => updateTabletCount(timeSlot.time, -1)}
+                    >
+                      <AntDesign name="minus" size={16} color={NAV_THEME.dark.primary} />
+                    </TouchableOpacity>
+                    
+                    <View style={[styles.countContainer, { 
+                      backgroundColor: tabletCount > 0 ? NAV_THEME.dark.primary : NAV_THEME.dark.background,
                       borderColor: NAV_THEME.dark.border
-                    }]}
-                    onPress={() => updateFrequency(index, 1)}
-                  >
-                    <AntDesign name="plus" size={16} color={NAV_THEME.dark.primary} />
-                  </TouchableOpacity>
+                    }]}>
+                      <Text style={[styles.frequencyCount, { 
+                        color: tabletCount > 0 ? '#fff' : NAV_THEME.dark.text 
+                      }]}>
+                        {tabletCount}
+                      </Text>
+                    </View>
+                    
+                    <TouchableOpacity
+                      style={[styles.frequencyButton, { 
+                        backgroundColor: NAV_THEME.dark.background,
+                        borderColor: NAV_THEME.dark.border
+                      }]}
+                      onPress={() => updateTabletCount(timeSlot.time, 1)}
+                    >
+                      <AntDesign name="plus" size={16} color={NAV_THEME.dark.primary} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
         </View>
       </View>

@@ -50,7 +50,7 @@ const MedicationSheet: React.FC<MedicationSheetProps> = ({
   };
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text
           style={{
             marginBottom: 8,
@@ -68,7 +68,7 @@ const MedicationSheet: React.FC<MedicationSheetProps> = ({
           size={20}
           color={NAV_THEME.dark.text}
         />
-      </View>
+      </View> */}
       <Text style={{ color: NAV_THEME.dark.text }}>
         {medicine.uses_of_the_medicine}
       </Text>
@@ -279,6 +279,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     marginBottom: 24,
+    marginTop: 16,
   },
   infoMutedInfo: {
     marginBottom: 4,

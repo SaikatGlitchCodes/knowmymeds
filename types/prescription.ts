@@ -13,6 +13,7 @@ export interface PrescriptionFormData {
   dose_in_mg: string;
   form: MedicineForm;
   quantity: string;
+  uses_of_the_medicine?: string;
   treatment_start_date: string;
   treatment_end_date: string;
   special_instructions?: string;
