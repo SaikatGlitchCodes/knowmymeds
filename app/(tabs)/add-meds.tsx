@@ -1,13 +1,16 @@
 import { NAV_THEME } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
+import { aiOnImage } from "@/utils/aiUtils";
 import { getImageBase64, openCamera } from "@/utils/imageUtils";
+import { mapFormToPrescriptionData } from "@/utils/prescriptionUtils";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import axios from 'axios';
+import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -66,19 +69,19 @@ const AddMedsHomePage = () => {
             quality: 1,
             base64: true,
           });
-          
+
           if (!canceled && uri) {
             if (session?.user.id) {
               const base64 = await getImageBase64(uri);
-              const response = await axios.post('https://medicineschedulerai.onrender.com/generate/image', {
-                imageBase64: base64,
-              });
-              const cleanedResponse =  JSON.parse(response.data.response.replace(/```json|```/g, '').trim());
-              console.log('Cleaned Response:', JSON.stringify(cleanedResponse));
+              const response = await aiOnImage(base64);
+              const cleanedResponse = JSON.parse(
+                response.data.response.replace(/```json|```/g, "").trim()
+              );
+              const cleanUp = mapFormToPrescriptionData(cleanedResponse);
               router.push({
-              pathname: "/addMedsForm",
-              params: { prefillData: JSON.stringify(cleanedResponse) },
-            });
+                pathname: "/addMedsForm",
+                params: { prefillData: JSON.stringify(cleanUp) },
+              });
             }
           }
         } catch (error) {
@@ -132,7 +135,8 @@ const AddMedsHomePage = () => {
                   height: 100,
                   width: 100,
                   backgroundColor: NAV_THEME.dark.btn,
-                  opacity: (method.name === "Scan with AI" && aiLoading) ? 0.5 : 1,
+                  opacity:
+                    method.name === "Scan with AI" && aiLoading ? 0.5 : 1,
                 }}
                 onPress={method.methods}
                 disabled={method.name === "Scan with AI" && aiLoading}
@@ -143,7 +147,9 @@ const AddMedsHomePage = () => {
                   method.logo
                 )}
                 <Text style={{ color: NAV_THEME.dark.text }}>
-                  {method.name === "Scan with AI" && aiLoading ? "Processing..." : method.name}
+                  {method.name === "Scan with AI" && aiLoading
+                    ? "Processing..."
+                    : method.name}
                 </Text>
               </TouchableOpacity>
             ))}

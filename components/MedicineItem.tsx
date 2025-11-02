@@ -33,7 +33,7 @@ const MedicineItem = memo(({ medicine, onPress, getStatusBadgeStyle }: MedicineI
           </Text>
         </View>
         <View style={styles.itemDetails}>
-          <Text style={styles.dosageText}>{medicine.dose_in_mg}mg</Text>
+          <Text style={styles.dosageText}>{medicine.dose_in_mg}mg | {medicine.number_of_tablets} {medicine.form.toLowerCase()}</Text>
           <View
             style={[styles.statusBadge, getStatusBadgeStyle(medicine.status)]}
           >

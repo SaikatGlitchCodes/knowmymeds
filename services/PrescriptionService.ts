@@ -27,6 +27,7 @@ export class PrescriptionService {
           treatment_start_date: formData.treatment_start_date,
           treatment_end_date: formData.treatment_end_date,
           side_effects: formData.side_effects,
+          uses_of_the_medicine: formData.uses_of_the_medicine,
           special_instructions: formData.special_instructions,
         })
         .select()

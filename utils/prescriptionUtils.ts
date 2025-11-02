@@ -31,16 +31,18 @@ export const mapFormToPrescriptionData = (formValues: MedicineInfo): Prescriptio
   return {
     medicine: formValues.medicine.trim(),
     dose_in_mg: formValues.dose_in_mg.trim(),
+    uses_of_the_medicine: formValues.uses_of_the_medicine?.trim() || undefined,
     form: getMedicineForm(formValues.form),
     quantity: formValues.quantity.trim(),
     treatment_start_date: convertDate(formValues.start_date),
     treatment_end_date: convertDate(formValues.end_date),
     special_instructions: formValues.special_instructions?.trim() || undefined,
+    side_effects: formValues.side_effects?.trim() || undefined,
     frequency: formValues.frequency
-      .filter(f => f.time && f.tablets > 0)
+      .filter(f => f.time && f.number_of_tablets > 0)
       .map(f => ({
         time: f.time,
-        number_of_tablets: f.tablets
+        number_of_tablets: f.number_of_tablets
       }))
   };
 };

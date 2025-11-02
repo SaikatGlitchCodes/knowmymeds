@@ -45,7 +45,11 @@ const AddMedsForm = () => {
     start_date: prefillData?.start_date || '',
     end_date: prefillData?.end_date || '',
     prescription_refills: prefillData?.prescription_refills || 0,
+    side_effects: prefillData?.side_effects || '',
+    uses_of_the_medicine: prefillData?.uses_of_the_medicine || '',
   };
+
+  console.log('initialValues', initialValues)
 
   const steps = [
     {
@@ -203,7 +207,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#3b82f6',
+    backgroundColor: NAV_THEME.dark.primary,
     borderRadius: 2,
   },
   content: {

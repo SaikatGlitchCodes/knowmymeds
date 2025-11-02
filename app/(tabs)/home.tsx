@@ -242,6 +242,17 @@ export default function HomeScreen() {
           }
         >
           <View>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "300",
+                color: NAV_THEME.dark.text,
+                textAlign: "center",
+              }}
+            >
+              {selectedItem.medicine}{" "}
+              {selectedItem.dose_in_mg ? `${selectedItem.dose_in_mg} mg` : ""}
+            </Text>
             {selectedItem?.status !== "taken" && (
               <SwipeButton
                 title="Swipe to take"
