@@ -10,6 +10,12 @@ export const MedicineDetailsForm: React.FC<FormStepProps> = ({
   touched, 
   setFieldValue 
 }) => {
+  const getDynamicIcon = (form: string, size: number, color: string) => {
+      const option = medicineFormOptions.find(
+        (option) => option.title === form
+      );
+      return option?.getIcon ? option.getIcon(size, color) : null;
+    };
   return (
     <View style={styles.formContainer}>
       {/* Medicine Name */}
@@ -47,7 +53,7 @@ export const MedicineDetailsForm: React.FC<FormStepProps> = ({
               ]}
               onPress={() => setFieldValue('form', item.title)}
             >
-              {item.icon}
+              {getDynamicIcon(item.title, 30, values.form === item.title ? NAV_THEME.dark.text : NAV_THEME.dark.primary)}
               <Text style={[
                 styles.formText,
                 { color: values.form === item.title ? '#fff' : NAV_THEME.dark.text }

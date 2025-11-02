@@ -12,8 +12,6 @@ export const DosageScheduleForm: React.FC<FormStepProps> = ({
   setFieldValue 
 }) => {
   
-  console.log('Current frequency values:', values.frequency);
-  
   // Simple function to get tablet count for a specific time
   const getTabletCount = (time: string) => {
     const slot = values.frequency.find(f => f.time === time);

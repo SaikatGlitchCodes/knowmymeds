@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -23,33 +24,19 @@ import SwipeButton from "rn-swipe-button";
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();
-  const { fetchCalendarData, calendarData, updateIntakeStatus } =
+  const { fetchCalendarData, calendarData, updateIntakeStatus, refreshCalendarData } =
     usePrescriptions();
   const [items, setItems] = useState<{ [key: string]: any[] }>({});
   const [selectedItem, setSelectedItem] =
     useState<CalendarMedicineSummary | null>(null);
   const trueSheetRef = useRef<BottomSheet>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  
 
   // Load initial calendar data
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const today = new Date();
-        const startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
-        const endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days ahead
-
-        await fetchCalendarData(
-          startDate.toISOString().split("T")[0],
-          endDate.toISOString().split("T")[0]
-        );
-      } catch (error) {
-        console.error("Error loading calendar data:", error);
-        Alert.alert("Error", "Failed to load calendar data");
-      }
-    };
-
-    loadData();
-  }, [fetchCalendarData]);
+    refreshCalendarData();
+  }, []);
 
   // Update items when calendarData changes
   useEffect(() => {
@@ -138,7 +125,6 @@ export default function HomeScreen() {
   );
 
   const handleMedicinePress = (item: CalendarMedicineSummary) => {
-    console.log("Medicine pressed:", item);
     trueSheetRef?.current?.snapToIndex(0);
     setSelectedItem(item);
   };
@@ -177,6 +163,17 @@ export default function HomeScreen() {
     trueSheetRef?.current?.close();
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshCalendarData();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
@@ -211,6 +208,14 @@ export default function HomeScreen() {
 
       {/* Agenda should NOT be wrapped in ScrollView */}
       <Agenda
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[NAV_THEME.dark.primary]}
+            progressBackgroundColor={"black"}
+          />
+        }
         items={items}
         loadItemsForMonth={loadItemsForMonth}
         selected={new Date().toISOString().split("T")[0]}
@@ -251,7 +256,8 @@ export default function HomeScreen() {
               }}
             >
               {selectedItem.medicine}{" "}
-              {selectedItem.dose_in_mg ? `${selectedItem.dose_in_mg} mg` : ""}
+              {selectedItem.dose_in_mg ? `${selectedItem.dose_in_mg} mg` : ""} |{" "}
+              {selectedItem.number_of_tablets} {selectedItem.form}
             </Text>
             {selectedItem?.status !== "taken" && (
               <SwipeButton

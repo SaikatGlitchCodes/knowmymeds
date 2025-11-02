@@ -4,13 +4,12 @@ import { aiOnImage } from "@/utils/aiUtils";
 import { getImageBase64, openCamera } from "@/utils/imageUtils";
 import { mapFormToPrescriptionData } from "@/utils/prescriptionUtils";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { method } from "lodash";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -48,7 +47,10 @@ const AddMedsHomePage = () => {
       ),
       name: "Fill Form",
       methods: () => {
-        router.push("/addMedsForm");
+        router.push({
+          pathname: "/addMedsForm",
+          params: { method: "fillForm" },
+        });
       },
     },
     {
@@ -74,13 +76,12 @@ const AddMedsHomePage = () => {
             if (session?.user.id) {
               const base64 = await getImageBase64(uri);
               const response = await aiOnImage(base64);
-              const cleanedResponse = JSON.parse(
-                response.data.response.replace(/```json|```/g, "").trim()
-              );
-              const cleanUp = mapFormToPrescriptionData(cleanedResponse);
               router.push({
                 pathname: "/addMedsForm",
-                params: { prefillData: JSON.stringify(cleanUp) },
+                params: {
+                  prefillData: JSON.stringify(response),
+                  method: "aiScan",
+                },
               });
             }
           }
