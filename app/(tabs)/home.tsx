@@ -246,7 +246,7 @@ export default function HomeScreen() {
         <TrueSheet
           ref={trueSheetRef}
           snapPoint={
-            selectedItem?.status === "taken" ? ["50%", "80%"] : ["15%", "70%"]
+            selectedItem?.status === "taken" ? ["50%", "80%"] : ["20%", "70%"]
           }
         >
           <View>
