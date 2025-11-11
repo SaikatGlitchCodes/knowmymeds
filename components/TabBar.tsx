@@ -10,7 +10,7 @@ const tabStyle = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 15,
+    paddingVertical: 0,
     paddingBottom: 30,
     alignItems: 'center',
   },
@@ -22,6 +22,7 @@ const tabStyle = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 20,
+    marginBottom: 10,
   },
   tab: {
     flex: 1,
