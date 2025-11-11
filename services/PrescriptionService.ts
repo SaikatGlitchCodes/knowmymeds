@@ -1,11 +1,12 @@
 import { supabase } from "../lib/supabase";
 import type {
-    CalendarMedicineSummary,
-    CreatePrescriptionResponse,
-    Prescription,
-    PrescriptionFormData,
-    PrescriptionSchedule
+  CalendarMedicineSummary,
+  CreatePrescriptionResponse,
+  Prescription,
+  PrescriptionFormData,
+  PrescriptionSchedule
 } from "../types/prescription";
+import { NotificationService } from "./NotificationService";
 
 export class PrescriptionService {
   // Add a new medicine prescription
@@ -64,6 +65,26 @@ export class PrescriptionService {
 
       if (logsError) throw logsError;
 
+      // Schedule notifications for the medication
+      try {
+        await NotificationService.scheduleMultipleMedicationReminders({
+          medicationName: formData.medicine,
+          dose: formData.dose_in_mg,
+          frequency: formData.frequency.map((slot, index) => ({
+            time: slot.time,
+            number_of_tablets: slot.number_of_tablets,
+            id: schedules[index]?.id || `${prescription.id}-${slot.time}`,
+          })),
+          startDate: prescription.treatment_start_date,
+          endDate: prescription.treatment_end_date,
+          prescriptionId: prescription.id,
+        });
+        console.log('Notifications scheduled for:', formData.medicine);
+      } catch (notificationError) {
+        console.error('Error scheduling notifications:', notificationError);
+        // Don't throw here - prescription was created successfully, notifications are optional
+      }
+
       return {
         prescription: prescription as Prescription,
         schedules: schedules as PrescriptionSchedule[],
@@ -104,6 +125,16 @@ export class PrescriptionService {
   // Delete a medicine by ID
   static async deleteMedicine(prescriptionId: string): Promise<void> {
     console.log("deleteMedicine")
+    
+    // Cancel notifications first
+    try {
+      await NotificationService.cancelPrescriptionNotifications(prescriptionId);
+      console.log('Notifications cancelled for prescription:', prescriptionId);
+    } catch (error) {
+      console.error('Error cancelling notifications:', error);
+      // Continue with deletion even if notification cancellation fails
+    }
+
     const { error } = await supabase
       .from('new_prescriptions')
       .delete()

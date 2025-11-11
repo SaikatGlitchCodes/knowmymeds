@@ -1,4 +1,5 @@
 export { default as ImageUploadService } from './ImageUploadService';
+export { NotificationService } from './NotificationService';
 export { PrescriptionService } from './PrescriptionService';
 export { ProfileService } from './ProfileService';
 

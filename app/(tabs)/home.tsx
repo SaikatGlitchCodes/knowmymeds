@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
+  ImageBackground,
   RefreshControl,
   StyleSheet,
   Text,
@@ -24,14 +25,13 @@ import SwipeButton from "rn-swipe-button";
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();
-  const { fetchCalendarData, calendarData, updateIntakeStatus, refreshCalendarData } =
+  const { calendarData, updateIntakeStatus, refreshCalendarData } =
     usePrescriptions();
   const [items, setItems] = useState<{ [key: string]: any[] }>({});
   const [selectedItem, setSelectedItem] =
     useState<CalendarMedicineSummary | null>(null);
   const trueSheetRef = useRef<BottomSheet>(null);
   const [refreshing, setRefreshing] = useState(false);
-  
 
   // Load initial calendar data
   useEffect(() => {
@@ -175,126 +175,145 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Image
-          source={require("../../assets/images/login.png")}
-          style={styles.headerBackgroundImg}
-        />
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.userInfo} onPress={navigateToProfile}>
-            <Image
-              source={{
-                uri: profile?.avatar_url || user?.user_metadata?.avatar_url,
-              }}
-              style={styles.avatar}
-            />
-            <View style={styles.userDetails}>
-              <Text style={styles.welcomeText}>Welcome back!</Text>
-              <Text style={styles.userName}>
-                {profile?.full_name ||
-                  user?.user_metadata?.full_name ||
-                  user?.email}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <Text style={styles.sectionTitle}>
-            Take Medicine today for health tomorrow
-          </Text>
-        </View>
-      </View>
-
-      {/* Agenda should NOT be wrapped in ScrollView */}
-      <Agenda
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[NAV_THEME.dark.primary]}
-            progressBackgroundColor={"black"}
+    <ImageBackground
+      source={require("../../assets/images/background1.png")}
+      style={styles.backgroundImage}
+      imageStyle={styles.backgroundImageStyle}
+    >
+      <SafeAreaView style={styles.container}>
+        <View style={styles.headerContainer}>
+          <Image
+            source={require("../../assets/images/login.png")}
+            style={styles.headerBackgroundImg}
           />
-        }
-        items={items}
-        loadItemsForMonth={loadItemsForMonth}
-        selected={new Date().toISOString().split("T")[0]}
-        pastScrollRange={2}
-        futureScrollRange={2}
-        removeClippedSubviews={true}
-        renderItem={renderItem}
-        renderEmptyDate={() => (
-          <View style={styles.emptyDate}>
-            <Text style={styles.emptyDateText}>No medicines scheduled</Text>
-          </View>
-        )}
-        theme={{
-          selectedDayBackgroundColor: NAV_THEME.dark.primary,
-          todayTextColor: NAV_THEME.dark.primary,
-          agendaTodayColor: NAV_THEME.dark.primary,
-          dotColor: NAV_THEME.dark.primary,
-          agendaKnobColor: NAV_THEME.dark.primary,
-          calendarBackground: NAV_THEME.dark.background,
-          dayTextColor: NAV_THEME.dark.text,
-          reservationsBackgroundColor: NAV_THEME.dark.background,
-        }}
-      />
-      {selectedItem && (
-        <TrueSheet
-          ref={trueSheetRef}
-          snapPoint={
-            selectedItem?.status === "taken" ? ["50%", "80%"] : ["15%", "70%"]
-          }
-        >
-          <View>
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "300",
-                color: NAV_THEME.dark.text,
-                textAlign: "center",
-              }}
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.userInfo}
+              onPress={navigateToProfile}
             >
-              {selectedItem.medicine}{" "}
-              {selectedItem.dose_in_mg ? `${selectedItem.dose_in_mg} mg` : ""} |{" "}
-              {selectedItem.number_of_tablets} {selectedItem.form}
-            </Text>
-            {selectedItem?.status !== "taken" && (
-              <SwipeButton
-                title="Swipe to take"
-                disableResetOnTap
-                onSwipeSuccess={handleSwipeSuccess}
-                containerStyles={{
-                  backgroundColor: NAV_THEME.dark.primary,
-                  margin: 20,
+              <Image
+                source={{
+                  uri: profile?.avatar_url || user?.user_metadata?.avatar_url,
                 }}
-                thumbIconBackgroundColor={NAV_THEME.dark.btn}
-                thumbIconBorderColor={NAV_THEME.dark.btn}
-                titleStyles={{ color: NAV_THEME.dark.text }}
-                railBackgroundColor={NAV_THEME.dark.card}
-                railBorderColor={NAV_THEME.dark.border}
-                thumbIconWidth={60}
-                railFillBackgroundColor={NAV_THEME.dark.btn}
-                railFillBorderColor={NAV_THEME.dark.btn}
-                shouldResetAfterSuccess={true}
+                style={styles.avatar}
               />
-            )}
-            <MedicationSheet
-              medicine={selectedItem}
-              handleClose={() => setSelectedItem(null)}
-              updateIntakeStatus={updateIntakeStatus}
-            />
+              <View style={styles.userDetails}>
+                <Text style={styles.welcomeText}>Welcome back!</Text>
+                <Text style={styles.userName}>
+                  {profile?.full_name ||
+                    user?.user_metadata?.full_name ||
+                    user?.email}
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
-        </TrueSheet>
-      )}
-    </SafeAreaView>
+          <View>
+            <Text style={styles.sectionTitle}>
+              Take Medicine today for health tomorrow
+            </Text>
+          </View>
+        </View>
+
+        {/* Agenda should NOT be wrapped in ScrollView */}
+        <Agenda
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[NAV_THEME.dark.primary]}
+              progressBackgroundColor={"black"}
+            />
+          }
+          items={items}
+          loadItemsForMonth={loadItemsForMonth}
+          selected={new Date().toISOString().split("T")[0]}
+          pastScrollRange={2}
+          futureScrollRange={2}
+          removeClippedSubviews={true}
+          renderItem={renderItem}
+          renderEmptyDate={() => (
+            <View style={styles.emptyDate}>
+              <Text style={styles.emptyDateText}>No medicines scheduled</Text>
+            </View>
+          )}
+          theme={{
+            selectedDayBackgroundColor: NAV_THEME.dark.primary,
+            todayTextColor: NAV_THEME.dark.primary,
+            agendaTodayColor: NAV_THEME.dark.primary,
+            dotColor: NAV_THEME.dark.primary,
+            agendaKnobColor: NAV_THEME.dark.primary,
+            calendarBackground: NAV_THEME.dark.background,
+            dayTextColor: NAV_THEME.dark.text,
+            reservationsBackgroundColor: NAV_THEME.dark.background,
+            monthTextColor: NAV_THEME.dark.text,
+            agendaDayTextColor: NAV_THEME.dark.text,
+            agendaDayNumColor: NAV_THEME.dark.text,
+          }}
+        />
+        {selectedItem && (
+          <TrueSheet
+            ref={trueSheetRef}
+            snapPoint={
+              selectedItem?.status === "taken" ? ["50%", "80%"] : ["15%", "70%"]
+            }
+          >
+            <View>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "300",
+                  color: NAV_THEME.dark.text,
+                  textAlign: "center",
+                }}
+              >
+                {selectedItem.medicine}{" "}
+                {selectedItem.dose_in_mg ? `${selectedItem.dose_in_mg} mg` : ""}{" "}
+                | {selectedItem.number_of_tablets} {selectedItem.form}
+              </Text>
+              {selectedItem?.status !== "taken" && (
+                <SwipeButton
+                  title="Swipe to take"
+                  disableResetOnTap
+                  onSwipeSuccess={handleSwipeSuccess}
+                  containerStyles={{
+                    backgroundColor: NAV_THEME.dark.primary,
+                    margin: 20,
+                  }}
+                  thumbIconBackgroundColor={NAV_THEME.dark.btn}
+                  thumbIconBorderColor={NAV_THEME.dark.btn}
+                  titleStyles={{ color: NAV_THEME.dark.text }}
+                  railBackgroundColor={NAV_THEME.dark.card}
+                  railBorderColor={NAV_THEME.dark.border}
+                  thumbIconWidth={60}
+                  railFillBackgroundColor={NAV_THEME.dark.btn}
+                  railFillBorderColor={NAV_THEME.dark.btn}
+                  shouldResetAfterSuccess={true}
+                />
+              )}
+              <MedicationSheet
+                medicine={selectedItem}
+                handleClose={() => setSelectedItem(null)}
+                updateIntakeStatus={updateIntakeStatus}
+              />
+            </View>
+          </TrueSheet>
+        )}
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  backgroundImage: {
     flex: 1,
     backgroundColor: NAV_THEME.dark.background,
+  },
+  backgroundImageStyle: {
+    resizeMode: "cover" as const,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "transparent",
   },
   headerContainer: {
     padding: 20,
