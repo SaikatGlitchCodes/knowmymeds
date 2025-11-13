@@ -2,11 +2,9 @@ import { NAV_THEME } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { aiOnImage } from "@/utils/aiUtils";
 import { getImageBase64, openCamera } from "@/utils/imageUtils";
-import { mapFormToPrescriptionData } from "@/utils/prescriptionUtils";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { method } from "lodash";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,

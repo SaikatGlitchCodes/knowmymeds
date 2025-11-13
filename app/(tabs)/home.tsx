@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
+  ImageBackground,
   RefreshControl,
   StyleSheet,
   Text,
@@ -24,14 +25,13 @@ import SwipeButton from "rn-swipe-button";
 
 export default function HomeScreen() {
   const { user, profile } = useAuth();
-  const { fetchCalendarData, calendarData, updateIntakeStatus, refreshCalendarData } =
+  const { calendarData, updateIntakeStatus, refreshCalendarData } =
     usePrescriptions();
   const [items, setItems] = useState<{ [key: string]: any[] }>({});
   const [selectedItem, setSelectedItem] =
     useState<CalendarMedicineSummary | null>(null);
   const trueSheetRef = useRef<BottomSheet>(null);
   const [refreshing, setRefreshing] = useState(false);
-  
 
   // Load initial calendar data
   useEffect(() => {
@@ -237,13 +237,16 @@ export default function HomeScreen() {
           calendarBackground: NAV_THEME.dark.background,
           dayTextColor: NAV_THEME.dark.text,
           reservationsBackgroundColor: NAV_THEME.dark.background,
+          monthTextColor: NAV_THEME.dark.text,
+          agendaDayTextColor: NAV_THEME.dark.text,
+          agendaDayNumColor: NAV_THEME.dark.text,
         }}
       />
       {selectedItem && (
         <TrueSheet
           ref={trueSheetRef}
           snapPoint={
-            selectedItem?.status === "taken" ? ["50%", "80%"] : ["15%", "70%"]
+            selectedItem?.status === "taken" ? ["50%", "80%"] : ["20%", "70%"]
           }
         >
           <View>
@@ -292,6 +295,13 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    backgroundColor: NAV_THEME.dark.background,
+  },
+  backgroundImageStyle: {
+    resizeMode: "cover" as const,
+  },
   container: {
     flex: 1,
     backgroundColor: NAV_THEME.dark.background,

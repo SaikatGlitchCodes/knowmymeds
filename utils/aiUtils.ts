@@ -14,8 +14,14 @@ export const aiOnImage = async (base64: string) => {
   return mapFormToPrescriptionData(responseData);
 };
 
-export const aiOnText = async (prescriptionData: string) =>
-  await axios.post(
-    "https://medicineschedulerai.onrender.com/generate/textinput",
-    { data: prescriptionData }
-  );
+export const aiOnText = async (data: string) => {
+  console.log("AI Request: ", data);
+  try{
+    const response = await axios.post('https://medicineschedulerai.onrender.com/generate/textinput', data);
+    console.log("AI Response: ", response.data);
+    return mapFormToPrescriptionData(response.data);
+  } catch (error) {
+    console.error("AI Error: ", error);
+    throw error;
+  }
+};

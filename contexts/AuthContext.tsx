@@ -1,8 +1,8 @@
 import { Session, User } from '@supabase/supabase-js';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { PreferencesData, ProfileData, ProfileService } from '../services/ProfileService';
-import { router } from 'expo-router';
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [preferences, setPreferences] = useState<PreferencesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const isInitialized = useRef(false);
 
   // Load profile and preferences data
   const loadProfileData = async (userId: string) => {
@@ -71,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(session.user);
           // Load profile data for initial session
           await loadProfileData(session.user.id);
+          isInitialized.current = true;
         }
       } catch (error) {
         console.error('❌ Error in getInitialSession:', error);
@@ -85,24 +87,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔔 Auth state changed:', event, session ? 'Session exists' : 'No session');
+        console.log('🔄 Is initialized:', isInitialized.current, 'Current loading:', loading);
         
+        // Don't set loading for TOKEN_REFRESHED events if we already have a session
+        if (event === 'TOKEN_REFRESHED' && isInitialized.current && session) {
+          console.log('Token refreshed for existing user, not setting loading');
+          setSession(session);
+          setUser(session.user);
+          return;
+        }
+
         if (session) {
           setSession(session);
           setUser(session.user);
           await loadProfileData(session.user.id);
+          isInitialized.current = true;
         } else {
           // Clear all state when session is null
           setSession(null);
           setUser(null);
           setProfile(null);
           setPreferences(null);
+          isInitialized.current = false;
         }
+        
+        console.log('✅ Setting loading to false after auth state change');
         setLoading(false);
       }
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signOut = async () => {
     try {
