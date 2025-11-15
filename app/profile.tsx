@@ -375,7 +375,6 @@ const Profile = () => {
             />
           </View>
         </View>
-
         {/* Account Actions */}
         <View style={styles.section}>
           <TouchableOpacity

@@ -4,13 +4,15 @@ import * as Notifications from 'expo-notifications';
 
 // Configure how notifications are handled when app is in foreground
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    console.log('Handling notification in foreground:', notification.request.identifier);
+    return {
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
 });
 
 export class NotificationService {
@@ -86,20 +88,37 @@ export class NotificationService {
 
       // Parse the date and time
       const [hours, minutes] = time.split(':').map(Number);
-      console.log('hours, minutes', hours, minutes);
+      console.log('Scheduling notification for:', { medicationName, time, date, hours, minutes });
+      
       const notificationDate = new Date(date);
       notificationDate.setHours(hours, minutes, 0, 0);
 
-      // Only schedule if the time is in the future
-      if (notificationDate <= new Date()) {
-        console.log('Cannot schedule notification for past time');
+      const now = new Date();
+      const timeDifferenceMs = notificationDate.getTime() - now.getTime();
+      const timeDifferenceSeconds = Math.floor(timeDifferenceMs / 1000);
+
+      console.log('Time calculation:', {
+        now: now.toISOString(),
+        notificationDate: notificationDate.toISOString(),
+        timeDifferenceMs,
+        timeDifferenceSeconds,
+      });
+
+      // Only schedule if the time is in the future (at least 30 seconds from now to avoid immediate firing)
+      if (timeDifferenceSeconds <= 30) {
+        console.log('Skipping notification - time is in the past or too close to current time:', {
+          notificationDate: notificationDate.toISOString(),
+          now: now.toISOString(),
+          timeDifferenceSeconds,
+          reason: timeDifferenceSeconds <= 0 ? 'Past time' : 'Too close to current time (less than 30 seconds)'
+        });
         return null;
       }
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: '💊 Medication Reminder',
-          body: `Time to take ${medicationName} (${dose}mg)`,
+          body: `Time to take ${medicationName} (${dose})`,
           sound: true,
           data: {
             prescriptionId,
@@ -111,11 +130,12 @@ export class NotificationService {
           },
         },
         trigger: { 
-          seconds: Math.max(1, Math.floor((notificationDate.getTime() - Date.now()) / 1000))
+          seconds: timeDifferenceSeconds
         } as Notifications.TimeIntervalTriggerInput,
       });
 
       console.log(`Scheduled notification ${notificationId} for ${medicationName} at ${time} on ${date}`);
+      console.log(`Notification will fire in ${timeDifferenceSeconds} seconds (${Math.floor(timeDifferenceSeconds / 60)} minutes)`);
       return notificationId;
     } catch (error) {
       console.error('Error scheduling notification:', error);
@@ -142,8 +162,18 @@ export class NotificationService {
     const notificationIds: string[] = [];
 
     try {
+      console.log('Scheduling multiple notifications for:', {
+        medicationName,
+        startDate,
+        endDate,
+        frequency: frequency.length,
+        currentTime: new Date().toISOString()
+      });
+
       const start = new Date(startDate);
       const end = new Date(endDate);
+
+      console.log('startDate', start, 'endDate', end)
 
       // Loop through each day in the treatment period
       for (let currentDate = new Date(start); currentDate <= end; currentDate.setDate(currentDate.getDate() + 1)) {
@@ -152,6 +182,8 @@ export class NotificationService {
         // Schedule notification for each frequency slot
         for (const slot of frequency) {
           if (slot.number_of_tablets > 0) {
+            console.log('Attempting to schedule for date:', dateString, 'time:', slot.time);
+            
             const notificationId = await this.scheduleMedicationReminder({
               medicationName,
               dose: `${dose} (${slot.number_of_tablets} tablet${slot.number_of_tablets > 1 ? 's' : ''})`,
@@ -163,6 +195,9 @@ export class NotificationService {
 
             if (notificationId) {
               notificationIds.push(notificationId);
+              console.log('Successfully scheduled notification:', notificationId, 'for', dateString, slot.time);
+            } else {
+              console.log('Failed to schedule notification for', dateString, slot.time);
             }
           }
         }
@@ -213,15 +248,50 @@ export class NotificationService {
     }
   }
 
-  // Get all scheduled notifications
+  // Get all scheduled notifications with detailed info
   static async getScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
     try {
       const notifications = await Notifications.getAllScheduledNotificationsAsync();
-      console.log(`Found ${notifications.length} scheduled notifications`);
+      console.log(`Found ${notifications.length} scheduled notifications:`);
+      
+      // Log details of each scheduled notification
+      notifications.forEach((notification, index) => {
+        const trigger = notification.trigger as any;
+        console.log(`Notification ${index + 1}:`, {
+          id: notification.identifier,
+          title: notification.content.title,
+          body: notification.content.body,
+          data: notification.content.data,
+          trigger: trigger,
+          triggerType: trigger.type || 'unknown'
+        });
+      });
+      
       return notifications;
     } catch (error) {
       console.error('Error getting scheduled notifications:', error);
       return [];
+    }
+  }
+
+  // Debug method to check notification timing
+  static async debugScheduledNotifications(): Promise<void> {
+    try {
+      const notifications = await this.getScheduledNotifications();
+      const now = new Date();
+      
+      console.log('Current time:', now.toISOString());
+      console.log('Scheduled notifications analysis:');
+      
+      notifications.forEach((notification, index) => {
+        const trigger = notification.trigger as any;
+        if (trigger.seconds) {
+          const triggerTime = new Date(now.getTime() + (trigger.seconds * 1000));
+          console.log(`Notification ${index + 1} will trigger at:`, triggerTime.toISOString());
+        }
+      });
+    } catch (error) {
+      console.error('Error debugging scheduled notifications:', error);
     }
   }
 
@@ -248,6 +318,48 @@ export class NotificationService {
     };
   }
 
+  // Test method to schedule a simple future notification
+  static async scheduleTestNotification(delaySeconds: number = 120): Promise<string | null> {
+    try {
+      const hasPermission = await this.requestPermissions();
+      if (!hasPermission) {
+        console.log('No notification permission for test');
+        return null;
+      }
+
+      const now = new Date();
+      const futureTime = new Date(now.getTime() + delaySeconds * 1000);
+      
+      console.log('Test notification scheduling:', {
+        now: now.toISOString(),
+        futureTime: futureTime.toISOString(),
+        delaySeconds
+      });
+
+      const notificationId = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🧪 Test Notification',
+          body: `This is a test notification scheduled for ${delaySeconds} seconds`,
+          sound: true,
+          data: {
+            test: true,
+            scheduledAt: now.toISOString(),
+            scheduledFor: futureTime.toISOString()
+          },
+        },
+        trigger: { 
+          seconds: delaySeconds
+        } as Notifications.TimeIntervalTriggerInput,
+      });
+
+      console.log(`Test notification scheduled: ${notificationId}, will fire in ${delaySeconds} seconds`);
+      return notificationId;
+    } catch (error) {
+      console.error('Error scheduling test notification:', error);
+      return null;
+    }
+  }
+
   // Clean up notification listeners
   static cleanupListeners(listeners: {
     notificationListener?: Notifications.Subscription;
@@ -255,5 +367,31 @@ export class NotificationService {
   }) {
     listeners.notificationListener?.remove();
     listeners.responseListener?.remove();
+  }
+
+  // Cancel any notifications that are scheduled for immediate firing (less than 10 seconds)
+  static async cancelImmediateNotifications(): Promise<void> {
+    try {
+      const notifications = await Notifications.getAllScheduledNotificationsAsync();
+      let cancelledCount = 0;
+
+      for (const notification of notifications) {
+        const trigger = notification.trigger as any;
+        // Only cancel if it's scheduled for less than 10 seconds (likely immediate)
+        if (trigger.seconds && trigger.seconds < 10) {
+          await this.cancelNotification(notification.identifier);
+          cancelledCount++;
+          console.log('Cancelled immediate notification:', notification.identifier, `(${trigger.seconds} seconds)`);
+        }
+      }
+
+      if (cancelledCount > 0) {
+        console.log(`Cancelled ${cancelledCount} immediate notifications`);
+      } else {
+        console.log('No immediate notifications found to cancel');
+      }
+    } catch (error) {
+      console.error('Error cancelling immediate notifications:', error);
+    }
   }
 }

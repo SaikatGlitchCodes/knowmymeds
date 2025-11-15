@@ -25,7 +25,6 @@ import { NAV_THEME } from "../constants";
 import { supabase } from "../lib/supabase";
 import { PrescriptionService } from "../services";
 import { mapFormToPrescriptionData } from "../utils/prescriptionUtils";
-import { aiOnText } from "@/utils/aiUtils";
 
 const AddMedsForm = () => {
   const router = useRouter();

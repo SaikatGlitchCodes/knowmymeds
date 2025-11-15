@@ -79,6 +79,16 @@ export const useNotifications = () => {
     return await NotificationService.getScheduledNotifications();
   };
 
+  // Function to debug scheduled notifications
+  const debugScheduledNotifications = async () => {
+    return await NotificationService.debugScheduledNotifications();
+  };
+
+  // Function to cancel immediate notifications
+  const cancelImmediateNotifications = async () => {
+    return await NotificationService.cancelImmediateNotifications();
+  };
+
   return {
     expoPushToken,
     hasPermission,
@@ -86,5 +96,7 @@ export const useNotifications = () => {
     scheduleMedicationReminders,
     cancelPrescriptionNotifications,
     getScheduledNotifications,
+    debugScheduledNotifications,
+    cancelImmediateNotifications,
   };
 };
