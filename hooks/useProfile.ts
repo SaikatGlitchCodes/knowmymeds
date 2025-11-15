@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PreferencesData, ProfileData, ProfileService } from '../services/ProfileService';
 
@@ -15,7 +15,7 @@ export const useProfile = () => {
   
   const [updating, setUpdating] = useState(false);
 
-  const updateProfile = async (updates: Partial<ProfileData>): Promise<boolean> => {
+  const updateProfile = useCallback(async (updates: Partial<ProfileData>): Promise<boolean> => {
     if (!session?.user.id) return false;
     try {
       const updatedProfile = await ProfileService.updateProfile(session.user.id, updates);
@@ -26,9 +26,9 @@ export const useProfile = () => {
       console.error('Error updating profile:', error);
       return false;
     }
-  };
+  }, [session?.user.id, updateCachedProfile]);
 
-  const updatePreferences = async (updates: Partial<PreferencesData>): Promise<boolean> => {
+  const updatePreferences = useCallback(async (updates: Partial<PreferencesData>): Promise<boolean> => {
     if (!session?.user?.id) return false;
     try {
       const updatedPreferences = await ProfileService.updatePreferences(session.user.id, updates);
@@ -39,9 +39,9 @@ export const useProfile = () => {
       console.error('Error updating preferences:', error);
       return false;
     }
-  };
+  }, [session?.user?.id, updateCachedPreferences]);
 
-  const uploadAvatar = async (imageUri: string): Promise<boolean> => {
+  const uploadAvatar = useCallback(async (imageUri: string): Promise<boolean> => {
     if (!session?.user.id) return false;
     
     setUpdating(true);
@@ -60,7 +60,7 @@ export const useProfile = () => {
     } finally {
       setUpdating(false);
     }
-  };
+  }, [session?.user.id, refreshProfileData]);
 
   return {
     profile,

@@ -30,7 +30,7 @@ export const useNotifications = () => {
         setLastNotification(notification);
       },
       (response) => {
-        console.log('User interacted with notification:', response);
+        console.log('User interacted with notification:', JSON.stringify(response));
         // You can handle navigation or other actions here
         const data = response.notification.request.content.data;
         if (data?.prescriptionId) {

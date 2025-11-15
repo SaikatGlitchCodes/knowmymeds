@@ -6,12 +6,11 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
-  ImageBackground,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Agenda } from "react-native-calendars";
 import { useAuth } from "../../contexts/AuthContext";
@@ -24,7 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SwipeButton from "rn-swipe-button";
 
 export default function HomeScreen() {
-  const { user, profile } = useAuth();
+  const { user, profile, expoPushToken, hasNotificationPermission } = useAuth();
   const { calendarData, updateIntakeStatus, refreshCalendarData } =
     usePrescriptions();
   const [items, setItems] = useState<{ [key: string]: any[] }>({});
@@ -196,6 +195,12 @@ export default function HomeScreen() {
                   user?.user_metadata?.full_name ||
                   user?.email}
               </Text>
+              {/* Notification Status */}
+              {hasNotificationPermission ? (
+                <Text style={styles.notificationStatus}>🔔 Notifications enabled</Text>
+              ) : (
+                <Text style={styles.notificationStatusDisabled}>🔕 Notifications disabled</Text>
+              )}
             </View>
           </TouchableOpacity>
         </View>
@@ -380,6 +385,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 14,
     fontWeight: "600",
+  },
+  notificationStatus: {
+    color: "#10b981",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 2,
+  },
+  notificationStatusDisabled: {
+    color: "#ef4444",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 2,
   },
   headerBackgroundImg: {
     position: "absolute",

@@ -1,6 +1,7 @@
 import { Session, User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useNotifications } from '../hooks/useNotifications';
 import { supabase } from '../lib/supabase';
 import { PreferencesData, ProfileData, ProfileService } from '../services/ProfileService';
 
@@ -11,6 +12,8 @@ interface AuthContextType {
   preferences: PreferencesData | null;
   loading: boolean;
   profileLoading: boolean;
+  expoPushToken: string | null;
+  hasNotificationPermission: boolean;
   signOut: () => Promise<void>;
   updateCachedProfile: (updates: ProfileData) => void;
   updateCachedPreferences: (updates: PreferencesData) => void;
@@ -28,8 +31,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(false);
   const isInitialized = useRef(false);
 
+  // Initialize notifications
+  const { expoPushToken, hasPermission: hasNotificationPermission } = useNotifications();
+
   // Load profile and preferences data
-  const loadProfileData = async (userId: string) => {
+  const loadProfileData = useCallback(async (userId: string) => {
     setProfileLoading(true);
     try {
       const [profileData, preferencesData] = await Promise.all([
@@ -39,25 +45,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(profileData);
       setPreferences(preferencesData);
     } catch (error) {
-      console.error('❌ Error loading profile data:', error);
+      console.error('Error loading profile data:', error);
     } finally {
       setProfileLoading(false);
     }
-  };
+  }, []);
 
-  const updateCachedProfile = (updates: ProfileData) => {
+  const updateCachedProfile = useCallback((updates: ProfileData) => {
     setProfile(updates);
-  };
+  }, []);
 
-  const updateCachedPreferences = (updates: PreferencesData) => {
+  const updateCachedPreferences = useCallback((updates: PreferencesData) => {
     setPreferences(updates);
-  };
+  }, []);
 
-  const refreshProfileData = async () => {
+  const refreshProfileData = useCallback(async () => {
     if (session?.user.id) {
       await loadProfileData(session.user.id);
     }
-  };
+  }, [session?.user.id, loadProfileData]);
 
   useEffect(() => {
     // Get initial session
@@ -146,6 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile,
       preferences,
       profileLoading,
+      expoPushToken,
+      hasNotificationPermission,
       updateCachedProfile,
       updateCachedPreferences,
       refreshProfileData
