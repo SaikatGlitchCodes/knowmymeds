@@ -52,51 +52,10 @@ export const useNotifications = () => {
     };
   }, []);
 
-  // Function to schedule medication reminders
-  const scheduleMedicationReminders = async (prescriptionData: {
-    medicationName: string;
-    dose: string;
-    frequency: { time: string; number_of_tablets: number; id?: string }[];
-    startDate: string;
-    endDate: string;
-    prescriptionId: string;
-  }) => {
-    if (!hasPermission) {
-      console.log('No notification permission');
-      return [];
-    }
-
-    return await NotificationService.scheduleMultipleMedicationReminders(prescriptionData);
-  };
-
-  // Function to cancel prescription notifications
-  const cancelPrescriptionNotifications = async (prescriptionId: string) => {
-    await NotificationService.cancelPrescriptionNotifications(prescriptionId);
-  };
-
-  // Function to get all scheduled notifications
-  const getScheduledNotifications = async () => {
-    return await NotificationService.getScheduledNotifications();
-  };
-
-  // Function to debug scheduled notifications
-  const debugScheduledNotifications = async () => {
-    return await NotificationService.debugScheduledNotifications();
-  };
-
-  // Function to cancel immediate notifications
-  const cancelImmediateNotifications = async () => {
-    return await NotificationService.cancelImmediateNotifications();
-  };
 
   return {
     expoPushToken,
     hasPermission,
     lastNotification,
-    scheduleMedicationReminders,
-    cancelPrescriptionNotifications,
-    getScheduledNotifications,
-    debugScheduledNotifications,
-    cancelImmediateNotifications,
   };
 };
