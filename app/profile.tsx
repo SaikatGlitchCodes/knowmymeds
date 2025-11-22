@@ -48,6 +48,10 @@ const Profile = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  // Add flags to prevent auto-save on initial load
+  const [profileInitialized, setProfileInitialized] = useState(false);
+  const [preferencesInitialized, setPreferencesInitialized] = useState(false);
+
   // Debounced save functions with useCallback to prevent infinite re-renders
   const saveProfileDebounced = useCallback(async (profileData: any) => {
     try {
@@ -84,16 +88,21 @@ const Profile = () => {
         date_of_birth: profile.date_of_birth || '',
         avatar_url: profile.avatar_url || user?.user_metadata?.avatar_url || '',
       });
+      // Mark profile as initialized after setting temp state
+      setProfileInitialized(true);
     }
   }, [profile, user]);
 
   // Initialize temp preferences when preferences data is loaded
   useEffect(() => {
     if (preferences) {
+      console.log('📋 Initializing preferences with data:', preferences);
       setTempPreferences({
         email_notifications: Boolean(preferences.email_notifications ?? true),
         medication_reminders: Boolean(preferences.medication_reminders ?? true),
       });
+      // Mark preferences as initialized after setting temp state
+      setPreferencesInitialized(true);
     }
   }, [preferences]);
 
@@ -109,7 +118,7 @@ const Profile = () => {
 
   // Auto-save profile when tempProfile changes
   useEffect(() => {
-    if (profile) { // Only save if profile has been loaded
+    if (profile && profileInitialized) { // Only save if profile has been loaded AND initialized
       const profileChanges: any = {};
       
       // Check for actual changes compared to loaded profile
@@ -128,11 +137,11 @@ const Profile = () => {
         debouncedSaveProfile(profileChanges);
       }
     }
-  }, [tempProfile, profile, debouncedSaveProfile]);
+  }, [tempProfile, profile, profileInitialized, debouncedSaveProfile]);
 
   // Auto-save preferences when tempPreferences changes
   useEffect(() => {
-    if (preferences) { // Only save if preferences have been loaded
+    if (preferences && preferencesInitialized) { // Only save if preferences have been loaded AND initialized
       const preferenceChanges: any = {};
       
       // Check for actual changes compared to loaded preferences
@@ -145,10 +154,13 @@ const Profile = () => {
 
       // Only save if there are actual changes
       if (Object.keys(preferenceChanges).length > 0) {
+        console.log('🔄 Auto-saving preference changes:', preferenceChanges);
         debouncedSavePreferences(preferenceChanges);
+      } else {
+        console.log('✅ No preference changes detected, skipping save');
       }
     }
-  }, [tempPreferences, preferences, debouncedSavePreferences]);
+  }, [tempPreferences, preferences, preferencesInitialized, debouncedSavePreferences]);
 
   const handleImagePicker = async () => {
     const result = await openGallery();
@@ -375,7 +387,6 @@ const Profile = () => {
             />
           </View>
         </View>
-
         {/* Account Actions */}
         <View style={styles.section}>
           <TouchableOpacity

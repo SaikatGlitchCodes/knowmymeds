@@ -1,10 +1,10 @@
 import { supabase } from "../lib/supabase";
 import type {
-    CalendarMedicineSummary,
-    CreatePrescriptionResponse,
-    Prescription,
-    PrescriptionFormData,
-    PrescriptionSchedule
+  CalendarMedicineSummary,
+  CreatePrescriptionResponse,
+  Prescription,
+  PrescriptionFormData,
+  PrescriptionSchedule
 } from "../types/prescription";
 
 export class PrescriptionService {
@@ -63,7 +63,6 @@ export class PrescriptionService {
         .insert(intakeLogs);
 
       if (logsError) throw logsError;
-
       return {
         prescription: prescription as Prescription,
         schedules: schedules as PrescriptionSchedule[],
@@ -104,6 +103,7 @@ export class PrescriptionService {
   // Delete a medicine by ID
   static async deleteMedicine(prescriptionId: string): Promise<void> {
     console.log("deleteMedicine")
+
     const { error } = await supabase
       .from('new_prescriptions')
       .delete()

@@ -10,7 +10,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Agenda } from "react-native-calendars";
 import { useAuth } from "../../contexts/AuthContext";
@@ -23,15 +23,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SwipeButton from "rn-swipe-button";
 
 export default function HomeScreen() {
-  const { user, profile } = useAuth();
-  const { fetchCalendarData, calendarData, updateIntakeStatus, refreshCalendarData } =
+  const { user, profile, expoPushToken, hasNotificationPermission } = useAuth();
+  const { calendarData, updateIntakeStatus, refreshCalendarData } =
     usePrescriptions();
   const [items, setItems] = useState<{ [key: string]: any[] }>({});
   const [selectedItem, setSelectedItem] =
     useState<CalendarMedicineSummary | null>(null);
   const trueSheetRef = useRef<BottomSheet>(null);
   const [refreshing, setRefreshing] = useState(false);
-  
 
   // Load initial calendar data
   useEffect(() => {
@@ -196,6 +195,12 @@ export default function HomeScreen() {
                   user?.user_metadata?.full_name ||
                   user?.email}
               </Text>
+              {/* Notification Status */}
+              {hasNotificationPermission ? (
+                <Text style={styles.notificationStatus}>🔔 Notifications enabled</Text>
+              ) : (
+                <Text style={styles.notificationStatusDisabled}>🔕 Notifications disabled</Text>
+              )}
             </View>
           </TouchableOpacity>
         </View>
@@ -237,13 +242,16 @@ export default function HomeScreen() {
           calendarBackground: NAV_THEME.dark.background,
           dayTextColor: NAV_THEME.dark.text,
           reservationsBackgroundColor: NAV_THEME.dark.background,
+          monthTextColor: NAV_THEME.dark.text,
+          agendaDayTextColor: NAV_THEME.dark.text,
+          agendaDayNumColor: NAV_THEME.dark.text,
         }}
       />
       {selectedItem && (
         <TrueSheet
           ref={trueSheetRef}
           snapPoint={
-            selectedItem?.status === "taken" ? ["50%", "80%"] : ["15%", "70%"]
+            selectedItem?.status === "taken" ? ["50%", "80%"] : ["20%", "70%"]
           }
         >
           <View>
@@ -292,6 +300,13 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    backgroundColor: NAV_THEME.dark.background,
+  },
+  backgroundImageStyle: {
+    resizeMode: "cover" as const,
+  },
   container: {
     flex: 1,
     backgroundColor: NAV_THEME.dark.background,
@@ -370,6 +385,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 14,
     fontWeight: "600",
+  },
+  notificationStatus: {
+    color: "#10b981",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 2,
+  },
+  notificationStatusDisabled: {
+    color: "#ef4444",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 2,
   },
   headerBackgroundImg: {
     position: "absolute",

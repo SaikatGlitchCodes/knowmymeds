@@ -25,7 +25,6 @@ import { NAV_THEME } from "../constants";
 import { supabase } from "../lib/supabase";
 import { PrescriptionService } from "../services";
 import { mapFormToPrescriptionData } from "../utils/prescriptionUtils";
-import { aiOnText } from "@/utils/aiUtils";
 
 const AddMedsForm = () => {
   const router = useRouter();
@@ -84,6 +83,9 @@ const AddMedsForm = () => {
         Alert.alert("Error", "You must be logged in to add medicine");
         return;
       }
+      console.log('method', method)
+      // let value = method === 'fillForm' ? (await aiOnText(JSON.stringify(values))) : values;
+      console.log(" AI Prefill Result: ", values);
       const prescriptionData = mapFormToPrescriptionData(values);
       await PrescriptionService.addMedicine(user.id, prescriptionData);
 
